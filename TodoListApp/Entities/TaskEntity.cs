@@ -1,0 +1,36 @@
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+
+namespace TodoListApp.Entities;
+
+[Table("Tasks")]
+public class TaskEntity
+{
+    public int Id { get; set; }
+
+    [Required(ErrorMessage = "Title is required")]
+    [MaxLength(200)]
+    public string Title { get; set; } = string.Empty;
+
+    [MaxLength(1000)]
+    public string Description { get; set; } = string.Empty;
+
+    [Required]
+    public int UserId { get; set; }
+
+    [ForeignKey("TodoList")]
+    public int TodoListId { get; set; }
+
+    [Required]
+    [Column(TypeName = "datetime2")]
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+    [Column(TypeName = "datetime2")]
+    public DateTime? DueDate { get; set; }
+
+    public bool IsCompleted { get; set; }
+
+    public Statuses Status { get; set; } = Statuses.NotStarted;
+
+    public TodoListEntity? TodoList { get; set; }
+}
