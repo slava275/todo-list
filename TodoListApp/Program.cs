@@ -10,7 +10,13 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddDbContext<TodoListDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("TodoDbConnectionString")));
 
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        // Це перетворить StatusesEnum.InProgress на "InProgress" у JSON
+        options.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
+    });
+
 builder.Services.AddOpenApi();
 
 builder.Services.AddAutoMapper(cfg => cfg.AddProfile<AutomapperProfile>());

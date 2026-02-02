@@ -13,4 +13,11 @@ public class TodoListDbContext : DbContext
     public DbSet<TodoListEntity> TodoLists => this.Set<TodoListEntity>();
 
     public DbSet<TaskEntity> Tasks => this.Set<TaskEntity>();
+
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<TaskEntity>()
+            .Property(e => e.Status)
+            .HasConversion<string>();
+    }
 }
