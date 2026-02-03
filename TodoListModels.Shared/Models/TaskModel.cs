@@ -1,6 +1,4 @@
-using TodoListApp.Entities;
-
-namespace TodoListApp.Data.Models;
+namespace TodoListShared.Models.Models;
 
 public class TaskModel
 {

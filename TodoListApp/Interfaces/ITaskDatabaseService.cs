@@ -1,5 +1,5 @@
-using TodoListApp.Data.Models;
-using TodoListApp.Entities;
+using TodoListShared.Models;
+using TodoListShared.Models.Models;
 
 namespace TodoListApp.Interfaces;
 

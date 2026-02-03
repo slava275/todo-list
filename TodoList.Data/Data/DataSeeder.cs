@@ -1,7 +1,8 @@
 using Microsoft.EntityFrameworkCore;
-using TodoListApp.Entities;
+using TodoList.Data.Entities;
+using TodoListShared.Models;
 
-namespace TodoListApp.Data;
+namespace TodoList.Data.Data;
 
 public static class DataSeeder
 {

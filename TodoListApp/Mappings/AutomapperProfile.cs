@@ -1,6 +1,6 @@
 using AutoMapper;
-using TodoListApp.Data.Models;
-using TodoListApp.Entities;
+using TodoList.Data.Entities;
+using TodoListShared.Models.Models;
 
 namespace TodoListApp.Mappings;
 

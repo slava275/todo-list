@@ -1,4 +1,4 @@
-namespace TodoListApp.Entities;
+namespace TodoListShared.Models;
 
 public enum Statuses
 {

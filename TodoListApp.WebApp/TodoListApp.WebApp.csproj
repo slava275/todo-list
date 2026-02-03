@@ -16,6 +16,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\TodoListApp\TodoListApp.csproj" />
+    <ProjectReference Include="..\TodoListModels.Shared\TodoListShared.Models.csproj" />
   </ItemGroup>
 
 </Project>

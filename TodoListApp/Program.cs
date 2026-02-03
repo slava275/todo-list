@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Scalar.AspNetCore;
-using TodoListApp.Data;
+using TodoList.Data.Data;
 using TodoListApp.Interfaces;
 using TodoListApp.Mappings;
 using TodoListApp.Services;
@@ -13,7 +13,6 @@ builder.Services.AddDbContext<TodoListDbContext>(options =>
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
     {
-        // Це перетворить StatusesEnum.InProgress на "InProgress" у JSON
         options.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
     });
 

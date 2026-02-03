@@ -1,7 +1,17 @@
+using TodoListApp.WebApp.Interfaces;
+using TodoListApp.WebApp.Services;
+
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
 builder.Services.AddControllersWithViews();
+
+var apiUrl = builder.Configuration.GetValue<string>("ApiSettings:BaseUrl");
+
+builder.Services.AddHttpClient<ITodoListWebApiService, TodoListWebApiService>(client =>
+{
+    client.BaseAddress = new Uri(apiUrl!);
+    client.DefaultRequestHeaders.Add("Accept", "application/json");
+});
 
 var app = builder.Build();
 
@@ -24,6 +34,5 @@ app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}")
     .WithStaticAssets();
-
 
 app.Run();

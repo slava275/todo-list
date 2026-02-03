@@ -1,4 +1,4 @@
-namespace TodoListApp.Data.Models;
+namespace TodoListShared.Models.Models;
 
 public class TodoListModel
 {
@@ -8,5 +8,5 @@ public class TodoListModel
 
     public string Description { get; set; } = string.Empty;
 
-    public ICollection<TaskModel> Tasks { get; set; } = new List<TaskModel>();
+    public ICollection<TaskModel> Tasks { get; set; } = [];
 }

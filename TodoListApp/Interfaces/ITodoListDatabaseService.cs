@@ -1,4 +1,4 @@
-using TodoListApp.Data.Models;
+using TodoListShared.Models.Models;
 
 namespace TodoListApp.Interfaces;
 

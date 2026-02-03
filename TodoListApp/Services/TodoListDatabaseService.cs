@@ -1,9 +1,9 @@
 using AutoMapper;
 using Microsoft.EntityFrameworkCore;
-using TodoListApp.Data;
-using TodoListApp.Data.Models;
-using TodoListApp.Entities;
+using TodoList.Data.Data;
+using TodoList.Data.Entities;
 using TodoListApp.Interfaces;
+using TodoListShared.Models.Models;
 
 namespace TodoListApp.Services;
 
