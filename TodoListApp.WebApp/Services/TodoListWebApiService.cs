@@ -9,6 +9,12 @@ public class TodoListWebApiService : ITodoListWebApiService
 {
     private readonly HttpClient httpClient;
 
+    private readonly JsonSerializerOptions options = new JsonSerializerOptions
+    {
+        PropertyNameCaseInsensitive = true,
+        Converters = { new JsonStringEnumConverter() },
+    };
+
     public TodoListWebApiService(HttpClient httpClient)
     {
         this.httpClient = httpClient;
@@ -38,40 +44,22 @@ public class TodoListWebApiService : ITodoListWebApiService
 
     public async Task<IEnumerable<TodoListModel>> GetAllAsync()
     {
-        var options = new JsonSerializerOptions
-        {
-            PropertyNameCaseInsensitive = true,
-            Converters = { new JsonStringEnumConverter() },
-        };
-
-        return await this.httpClient.GetFromJsonAsync<IEnumerable<TodoListModel>>("todolists", options);
+        return await this.httpClient.GetFromJsonAsync<IEnumerable<TodoListModel>>("todolists", this.options)
+            ?? Enumerable.Empty<TodoListModel>();
     }
 
     public Task<TodoListModel> GetByIdAsync(int id)
     {
-        var options = new JsonSerializerOptions
-        {
-            PropertyNameCaseInsensitive = true,
-            Converters = { new JsonStringEnumConverter() },
-        };
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(id);
 
-        return this.httpClient.GetFromJsonAsync<TodoListModel>($"todolists/{id}", options);
+        return this.httpClient.GetFromJsonAsync<TodoListModel>($"todolists/{id}", this.options);
     }
 
     public async Task UpdateAsync(TodoListModel model)
     {
-        if (model is null)
-        {
-            throw new ArgumentNullException(nameof(model));
-        }
+        ArgumentNullException.ThrowIfNull(model);
 
-        var options = new JsonSerializerOptions
-        {
-            PropertyNameCaseInsensitive = true,
-            Converters = { new JsonStringEnumConverter() },
-        };
-
-        var response = await this.httpClient.PutAsJsonAsync($"todolists/{model.Id}", model, options);
+        var response = await this.httpClient.PutAsJsonAsync($"todolists/{model.Id}", model, this.options);
 
         response.EnsureSuccessStatusCode();
     }

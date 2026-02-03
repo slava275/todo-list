@@ -1,0 +1,61 @@
+@using TodoListShared.Models.Models
+@model TaskModel
+
+@{
+    ViewData["Title"] = "Додати нове завдання";
+}
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow border-0">
+                <div class="card-header bg-success text-white py-3">
+                    <h4 class="mb-0"><i class="bi bi-clipboard-plus"></i> @ViewData["Title"]</h4>
+                </div>
+                <div class="card-body p-4">
+                    <form asp-action="Create" asp-route-todolistId="@Model.TodoListId" method="post">
+                        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                        <input type="hidden" asp-for="TodoListId" />
+
+                        <div class="mb-3">
+                            <label asp-for="Title" class="form-label fw-bold">Що потрібно зробити?</label>
+                            <input asp-for="Title" class="form-control" placeholder="Наприклад: Купити молоко" />
+                            <span asp-validation-for="Title" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Description" class="form-label fw-bold">Опис (необов'язково)</label>
+                            <textarea asp-for="Description" class="form-control" rows="2" placeholder="Деталі завдання..."></textarea>
+                            <span asp-validation-for="Description" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="DueDate" class="form-label fw-bold">Виконати до:</label>
+                            <input asp-for="DueDate" type="date" class="form-control" />
+                            <span asp-validation-for="DueDate" class="text-danger"></span>
+                        </div>
+
+                        @* Поле статусу можна зробити прихованим або випадаючим списком *@
+                        <input type="hidden" asp-for="Status" value="0" />
+
+                        <div class="d-flex justify-content-between align-items-center mt-4">
+                            <a asp-action="Index" asp-route-todolistId="@Model.TodoListId" class="btn btn-outline-secondary">
+                                Скасувати
+                            </a>
+                            <button type="submit" class="btn btn-success px-4">
+                                <i class="bi bi-save"></i> Зберегти завдання
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

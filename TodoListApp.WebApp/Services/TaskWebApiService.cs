@@ -1,0 +1,64 @@
+using System.Text.Json;
+using System.Text.Json.Serialization;
+using TodoListApp.WebApp.Interfaces;
+using TodoListShared.Models.Models;
+
+namespace TodoListApp.WebApp.Services;
+
+public class TaskWebApiService : ITaskWebApiService
+{
+    private readonly HttpClient client;
+
+    private readonly JsonSerializerOptions options = new JsonSerializerOptions
+    {
+        PropertyNameCaseInsensitive = true,
+        Converters = { new JsonStringEnumConverter() },
+    };
+
+    public TaskWebApiService(HttpClient client)
+    {
+        this.client = client;
+    }
+
+    public async Task CreateAsync(TaskModel model)
+    {
+        ArgumentNullException.ThrowIfNull(model);
+
+        var response = await this.client.PostAsJsonAsync("tasks", model);
+
+        response.EnsureSuccessStatusCode();
+    }
+
+    public async Task DeleteByIdAsync(int id)
+    {
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(id);
+
+        var response = await this.client.DeleteAsync($"tasks/{id}");
+
+        response.EnsureSuccessStatusCode();
+    }
+
+    public async Task<IEnumerable<TaskModel>> GetAllByListIdAsync(int listId)
+    {
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(listId);
+
+        return await this.client.GetFromJsonAsync<IEnumerable<TaskModel>>($"tasks/list/{listId}", this.options)
+            ?? Enumerable.Empty<TaskModel>();
+    }
+
+    public async Task<TaskModel> GetByIdAsync(int id)
+    {
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(id);
+
+        return await this.client.GetFromJsonAsync<TaskModel>($"tasks/{id}", this.options);
+    }
+
+    public async Task UpdateAsync(TaskModel model)
+    {
+        ArgumentNullException.ThrowIfNull(model);
+
+        var response = await this.client.PutAsJsonAsync($"tasks/{model.Id}", model, this.options);
+
+        response.EnsureSuccessStatusCode();
+    }
+}

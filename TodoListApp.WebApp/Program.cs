@@ -13,6 +13,11 @@ builder.Services.AddHttpClient<ITodoListWebApiService, TodoListWebApiService>(cl
     client.DefaultRequestHeaders.Add("Accept", "application/json");
 });
 
+builder.Services.AddHttpClient<ITaskWebApiService, TaskWebApiService>(client =>
+{
+    client.BaseAddress = new Uri(apiUrl!);
+});
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
