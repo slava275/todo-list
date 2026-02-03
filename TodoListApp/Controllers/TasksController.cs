@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using TodoListApp.Data.Models;
+using TodoListApp.Entities;
 using TodoListApp.Interfaces;
 
 namespace TodoListApp.Controllers;
@@ -93,5 +94,46 @@ public class TasksController : ControllerBase
         }
 
         return this.Ok(tasks);
+    }
+
+    [HttpGet("assigned")]
+    public async Task<ActionResult<IEnumerable<TaskModel>>> GetAssignedTasks(
+    [FromQuery] Statuses? status,
+    [FromQuery] string sortBy = "name",
+    [FromQuery] bool isAscending = true)
+    {
+        // Тимчасово використовуємо hardcoded ID, поки не налаштуємо JWT Auth
+        int currentUserId = 0;
+
+        var tasks = await this.service.GetAssignedTasksAsync(currentUserId, status, sortBy, isAscending);
+
+        if (tasks == null || !tasks.Any())
+        {
+            return this.NotFound("No tasks assigned to you were found.");
+        }
+
+        return this.Ok(tasks);
+    }
+
+    [HttpPatch("{id}/status")]
+    public async Task<ActionResult> UpdateStatus(int id, [FromQuery] Statuses newStatus)
+    {
+        try
+        {
+            await this.service.ChangeStatusAsync(id, newStatus);
+            return this.NoContent();
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return this.NotFound(ex.Message);
+        }
+        catch (ArgumentOutOfRangeException ex)
+        {
+            return this.BadRequest(ex.Message);
+        }
+        catch (ArgumentException ex)
+        {
+            return this.BadRequest(ex.Message);
+        }
     }
 }

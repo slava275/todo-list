@@ -1,10 +1,15 @@
 using TodoListApp.Data.Models;
+using TodoListApp.Entities;
 
 namespace TodoListApp.Interfaces;
 
 public interface ITaskDatabaseService
 {
     Task<IEnumerable<TaskModel>> GetByListIdAsync(int todoListId);
+
+    Task<IEnumerable<TaskModel>> GetAssignedTasksAsync(int userId, Statuses? status, string sortBy, bool ascending);
+
+    Task ChangeStatusAsync(int id, Statuses status);
 
     Task<IEnumerable<TaskModel>> GetAllAsync();
 

@@ -18,7 +18,9 @@ public class TaskModel
 
     public DateTime? DueDate { get; set; }
 
-    public bool IsCompleted { get; set; }
+    public bool IsCompleted => this.Status == Statuses.Completed;
 
     public Statuses Status { get; set; }
+
+    public bool IsOverdue => !this.IsCompleted && this.DueDate.HasValue && this.DueDate.Value < DateTime.UtcNow;
 }

@@ -6,5 +6,5 @@ public enum Statuses
     InProgress,
     Completed,
     Overdue,
-    Сanceled,
+    Сancelled,
 }

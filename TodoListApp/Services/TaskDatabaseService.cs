@@ -1,3 +1,4 @@
+using System.Globalization;
 using AutoMapper;
 using Microsoft.EntityFrameworkCore;
 using TodoListApp.Data;
@@ -91,6 +92,54 @@ public class TaskDatabaseService : ITaskDatabaseService
         }
 
         this.mapper.Map(item, existingEntity);
+
+        await this.context.SaveChangesAsync();
+    }
+
+    public async Task<IEnumerable<TaskModel>> GetAssignedTasksAsync(int userId, Statuses? status, string sortBy, bool ascending)
+    {
+        var query = this.context.Tasks.Where(t => t.UserId == userId);
+
+        if (status.HasValue)
+        {
+            query = query.Where(t => t.Status == status.Value);
+        }
+        else
+        {
+            query = query.Where(t => t.Status != Statuses.Completed && t.Status != Statuses.Сancelled);
+        }
+
+        query = sortBy?.ToLower(CultureInfo.InvariantCulture) switch
+        {
+            "name" => ascending ? query.OrderBy(t => t.Title) : query.OrderByDescending(t => t.Title),
+            "duedate" => ascending ? query.OrderBy(t => t.DueDate) : query.OrderByDescending(t => t.DueDate),
+            _ => query.OrderBy(t => t.CreatedAt)
+        };
+
+        var entities = await query.ToListAsync();
+        return this.mapper.Map<IEnumerable<TaskModel>>(entities);
+    }
+
+    public async Task ChangeStatusAsync(int id, Statuses status)
+    {
+        if (!Enum.IsDefined(status))
+        {
+            throw new ArgumentException("Invalid status value.", nameof(status));
+        }
+
+        if (id <= 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(id), "ID must be a positive integer.");
+        }
+
+        var entity = await this.context.Tasks.FindAsync(id);
+
+        if (entity == null)
+        {
+            throw new KeyNotFoundException($"Task with ID {id} not found.");
+        }
+
+        entity.Status = status;
 
         await this.context.SaveChangesAsync();
     }
