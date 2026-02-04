@@ -33,5 +33,7 @@ public class TaskEntity
 
     public Statuses Status { get; set; } = Statuses.NotStarted;
 
+    public ICollection<TagEntity> Tags { get; set; } = [];
+
     public TodoListEntity? TodoList { get; set; }
 }

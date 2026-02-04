@@ -8,17 +8,24 @@ public static class DataSeeder
 {
     public static void Seed(TodoListDbContext context)
     {
-        // 1. Очищення таблиць перед кожним запуском
+        // 1. Очищення таблиць (враховуючи каскадне видалення)
         context.TodoLists.ExecuteDelete();
+        context.Tags.ExecuteDelete(); // Очищаємо теги також
 
-        // Скидаємо лічильники ID, щоб списки завжди мали Id 1 та 2
+        // Скидаємо лічильники ID
         context.Database.ExecuteSqlRaw("DBCC CHECKIDENT ('TodoLists', RESEED, 0)");
         context.Database.ExecuteSqlRaw("DBCC CHECKIDENT ('Tasks', RESEED, 0)");
+        context.Database.ExecuteSqlRaw("DBCC CHECKIDENT ('Tags', RESEED, 0)");
 
-        // 2. Створення двох різних списків справ
+        // 2. Створюємо спільні теги
+        var tagWork = new TagEntity { Name = "Робота" };
+        var tagEducation = new TagEntity { Name = "Навчання" };
+        var tagUrgent = new TagEntity { Name = "Терміново" };
+        var tagTravel = new TagEntity { Name = "Подорож" };
+
+        // 3. Створення списків із завданнями та прив'язкою тегів
         var lists = new List<TodoListEntity>
         {
-            // ПЕРШИЙ СПИСОК: Навчання
             new TodoListEntity
             {
                 Title = "Навчання в EPAM",
@@ -30,18 +37,21 @@ public static class DataSeeder
                         Title = "Завершити Epic 2",
                         Status = Statuses.Completed,
                         IsCompleted = true,
-                        CreatedAt = DateTime.UtcNow.AddDays(-5)
+                        CreatedAt = DateTime.UtcNow.AddDays(-5),
+                        UserId = 0,
+                        Tags = new List<TagEntity> { tagEducation, tagWork } // US17
                     },
                     new TaskEntity
                     {
                         Title = "Реалізувати Data Seeder",
                         Status = Statuses.InProgress,
                         CreatedAt = DateTime.UtcNow.AddDays(-1),
-                        DueDate = DateTime.UtcNow.AddDays(2)
+                        DueDate = DateTime.UtcNow.AddDays(2),
+                        UserId = 0,
+                        Tags = new List<TagEntity> { tagEducation, tagUrgent } // US17
                     }
                 }
             },
-            // ДРУГИЙ СПИСОК: Особисте
             new TodoListEntity
             {
                 Title = "Особисті плани",
@@ -53,7 +63,9 @@ public static class DataSeeder
                         Title = "Купити квитки",
                         Description = "Перевірити потяги до Варшави",
                         Status = Statuses.NotStarted,
-                        CreatedAt = DateTime.UtcNow
+                        CreatedAt = DateTime.UtcNow,
+                        UserId = 0,
+                        Tags = new List<TagEntity> { tagTravel, tagUrgent } // US17
                     },
                     new TaskEntity
                     {
@@ -61,13 +73,15 @@ public static class DataSeeder
                         Description = "Цей таск має бути підсвічений червоним",
                         Status = Statuses.InProgress,
                         CreatedAt = DateTime.UtcNow.AddDays(-10),
-                        DueDate = DateTime.UtcNow.AddDays(-2) // US10: Прострочено
+                        DueDate = DateTime.UtcNow.AddDays(-2),
+                        UserId = 0,
+                        Tags = new List<TagEntity> { tagUrgent } // US17
                     }
                 }
             }
         };
 
         context.TodoLists.AddRange(lists);
-        context.SaveChanges();
+        context.SaveChanges(); // EF Core сам заповнить проміжну таблицю TaskTags
     }
 }

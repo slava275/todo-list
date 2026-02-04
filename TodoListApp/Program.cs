@@ -22,6 +22,7 @@ builder.Services.AddAutoMapper(cfg => cfg.AddProfile<AutomapperProfile>());
 
 builder.Services.AddScoped<ITodoListDatabaseService, TodoListDatabaseService>();
 builder.Services.AddScoped<ITaskDatabaseService, TaskDatabaseService>();
+builder.Services.AddScoped<ITagDatabaseService, TagDatabaseService>();
 
 var app = builder.Build();
 
