@@ -138,4 +138,16 @@ public class TasksAppController : Controller
 
         return this.View(tasks);
     }
+
+    [HttpGet("Search")]
+    public async Task<IActionResult> Search(string? title, DateTime? dueDate, DateTime? createdAt)
+    {
+        var results = await this.service.SearchAsync(title, dueDate, createdAt);
+
+        this.ViewBag.TitleFilter = title;
+        this.ViewBag.DueDateFilter = dueDate;
+        this.ViewBag.CreatedAtFilter = createdAt;
+
+        return this.View(results);
+    }
 }

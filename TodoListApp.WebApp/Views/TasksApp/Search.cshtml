@@ -1,0 +1,78 @@
+@model IEnumerable<TaskModel>
+@{
+    ViewData["Title"] = "Search";
+}
+
+<div class="container mt-4">
+    <h2 class="mb-4"><i class="bi bi-search"></i> @ViewData["Title"]</h2>
+
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <form asp-action="Search" method="get" class="row g-3">
+                <div class="col-md-4">
+                    <label class="form-label fw-bold">Назва:</label>
+                    <input type="text" name="title" class="form-control" value="@ViewBag.TitleFilter" placeholder="Введіть назву..." />
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label fw-bold">Виконати до:</label>
+                    <input type="date" name="dueDate" class="form-control" value="@(ViewBag.DueDateFilter != null ? ((DateTime)ViewBag.DueDateFilter).ToString("yyyy-MM-dd") : "")" />
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label fw-bold">Дата створення:</label>
+                    <input type="date" name="createdAt" class="form-control" value="@(ViewBag.CreatedAtFilter != null ? ((DateTime)ViewBag.CreatedAtFilter).ToString("yyyy-MM-dd") : "")" />
+                </div>
+                <div class="col-md-2 d-flex align-items-end gap-2">
+                    <button type="submit" class="btn btn-primary flex-grow-1" title="Шукати">
+                        <i class="bi bi-search"></i>Search
+                    </button>
+                    <a asp-action="Search" class="btn btn-outline-warning flex-grow-1" title="Очистити фільтри">
+                        <i class="bi bi-x-circle"></i>Reset
+                    </a>
+                    <a asp-action="Assigned" class="btn btn-outline-secondary flex-grow-1" title="До моїх завдань">
+                        <i class="bi bi-list-task"></i>Go back
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    @if (Model != null && Model.Any())
+    {
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>Завдання</th>
+                        <th>Створено</th>
+                        <th>Дедлайн</th>
+                        <th>Статус</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var task in Model)
+                    {
+                        bool isOverdue = task.Status.ToString() != "Completed" &&
+                        task.DueDate.HasValue && task.DueDate < DateTime.Now;
+
+                        <tr class="@(isOverdue ? "table-danger" : "")">
+                            <td>
+                                <strong>@task.Title</strong>
+                                @if (isOverdue)
+                                {
+                                    <span class="badge bg-danger ms-2">Протерміновано!</span>
+                                }
+                            </td>
+                            <td>@task.CreatedAt.ToString("dd.MM.yyyy")</td>
+                            <td>@task.DueDate?.ToString("dd.MM.yyyy")</td>
+                            <td><span class="badge bg-info">@task.Status</span></td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+    else if (ViewBag.TitleFilter != null || ViewBag.DueDateFilter != null || ViewBag.CreatedAtFilter != null)
+    {
+        <div class="alert alert-warning">За вашим запитом нічого не знайдено.</div>
+    }
+</div>

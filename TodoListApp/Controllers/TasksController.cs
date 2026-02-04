@@ -136,4 +136,20 @@ public class TasksController : ControllerBase
             return this.BadRequest(ex.Message);
         }
     }
+
+    [HttpGet("search")]
+    public async Task<ActionResult<IEnumerable<TaskModel>>> SearchTasks(
+        [FromQuery] string? title,
+        [FromQuery] DateTime? dueDate,
+        [FromQuery] DateTime? createdAt)
+    {
+        var tasks = await this.service.SerchTasksAsync(title, dueDate, createdAt);
+
+        if (tasks is null || !tasks.Any())
+        {
+            return this.NotFound("No tasks matching the search criteria were found.");
+        }
+
+        return this.Ok(tasks);
+    }
 }

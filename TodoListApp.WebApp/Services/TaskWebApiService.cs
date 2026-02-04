@@ -82,4 +82,35 @@ public class TaskWebApiService : ITaskWebApiService
             return Enumerable.Empty<TaskModel>();
         }
     }
+
+    public async Task<IEnumerable<TaskModel>> SearchAsync(string? title, DateTime? dueDate, DateTime? createdAt)
+    {
+        var url = "tasks/search?";
+        if (!string.IsNullOrWhiteSpace(title))
+        {
+            url += $"title={Uri.EscapeDataString(title)}&";
+        }
+
+        if (dueDate.HasValue)
+        {
+            url += $"dueDate={dueDate.Value:O}&";
+        }
+
+        if (createdAt.HasValue)
+        {
+            url += $"createdAt={createdAt.Value:O}&";
+        }
+
+        url = url.TrimEnd('&', '?');
+
+        try
+        {
+            var response = await this.client.GetFromJsonAsync<IEnumerable<TaskModel>>(url, this.options);
+            return response ?? Enumerable.Empty<TaskModel>();
+        }
+        catch (HttpRequestException)
+        {
+            return Enumerable.Empty<TaskModel>();
+        }
+    }
 }

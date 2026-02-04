@@ -144,4 +144,28 @@ public class TaskDatabaseService : ITaskDatabaseService
 
         await this.context.SaveChangesAsync();
     }
+
+    public async Task<IEnumerable<TaskModel>> SerchTasksAsync(string? title, DateTime? dueDate, DateTime? createdAt)
+    {
+        var query = this.context.Tasks.AsQueryable();
+
+        if (!string.IsNullOrWhiteSpace(title))
+        {
+            query = query.Where(t => t.Title.Contains(title));
+        }
+
+        if (dueDate.HasValue)
+        {
+            query = query.Where(t => t.DueDate.HasValue && t.DueDate.Value.Date == dueDate.Value.Date);
+        }
+
+        if (createdAt.HasValue)
+        {
+            query = query.Where(t => t.CreatedAt.Date == createdAt.Value.Date);
+        }
+
+        var entities = await query.ToListAsync();
+
+        return this.mapper.Map<IEnumerable<TaskModel>>(entities);
+    }
 }

@@ -22,4 +22,6 @@ public interface ITaskDatabaseService
     Task DeleteByIdAsync(int id);
 
     Task UpdateAsync(TaskModel item);
+
+    Task<IEnumerable<TaskModel>> SerchTasksAsync(string? title, DateTime? dueDate, DateTime? createdAt);
 }
