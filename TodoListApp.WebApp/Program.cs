@@ -18,6 +18,11 @@ builder.Services.AddHttpClient<ITaskWebApiService, TaskWebApiService>(client =>
     client.BaseAddress = new Uri(apiUrl!);
 });
 
+builder.Services.AddHttpClient<ITagWebApiService, TagWebApiService>(client =>
+{
+    client.BaseAddress = new Uri(apiUrl!);
+});
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.

@@ -15,7 +15,9 @@ public class AutomapperProfile : Profile
             .ReverseMap();
 
         this.CreateMap<TaskEntity, TaskModel>()
-            .ForMember(dest => dest.Tags, opt => opt.MapFrom(src => src.Tags))
-            .ReverseMap();
+            .ForMember(dest => dest.Tags, opt => opt.MapFrom(src => src.Tags));
+
+        this.CreateMap<TaskModel, TaskEntity>()
+            .ForMember(dest => dest.Tags, opt => opt.Ignore());
     }
 }

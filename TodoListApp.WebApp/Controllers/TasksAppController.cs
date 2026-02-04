@@ -9,10 +9,12 @@ namespace TodoListApp.WebApp.Controllers;
 public class TasksAppController : Controller
 {
     private readonly ITaskWebApiService service;
+    private readonly ITagWebApiService tagService;
 
-    public TasksAppController(ITaskWebApiService service)
+    public TasksAppController(ITaskWebApiService service, ITagWebApiService tagService)
     {
         this.service = service;
+        this.tagService = tagService;
     }
 
     [HttpGet("List/{todolistId}")]
@@ -149,5 +151,24 @@ public class TasksAppController : Controller
         this.ViewBag.CreatedAtFilter = createdAt;
 
         return this.View(results);
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> AddTag(int taskId, string tagName)
+    {
+        if (!string.IsNullOrWhiteSpace(tagName))
+        {
+            await this.tagService.AddTagToTaskAsync(taskId, new TagModel { Name = tagName.Trim() });
+        }
+
+        return this.RedirectToAction("Edit", new { id = taskId });
+    }
+
+    [HttpPost("RemoveTag")]
+    public async Task<IActionResult> RemoveTag(int taskId, int tagId)
+    {
+        await this.tagService.RemoveTagFromTaskAsync(taskId, tagId);
+
+        return this.RedirectToAction("Edit", new { id = taskId });
     }
 }

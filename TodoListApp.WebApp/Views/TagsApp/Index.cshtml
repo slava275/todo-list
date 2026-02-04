@@ -1,0 +1,38 @@
+@model IEnumerable<TagModel>
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="bi bi-tags"></i> Усі теги</h2>
+
+        <div class="input-group style="max-width: 300px;">
+            <span class="input-group-text bg-white border-end-0"><i class="bi bi-search"></i></span>
+            <input type="text" id="tagSearch" class="form-control border-start-0" placeholder="Пошук тегу...">
+        </div>
+    </div>
+
+    <div class="row" id="tagsList">
+        @foreach (var tag in Model)
+        {
+            <div class="col-md-3 mb-3 tag-card">
+                <a asp-action="Filter" asp-route-tagId="@tag.Id" asp-route-tagName="@tag.Name"
+                   class="card text-decoration-none shadow-sm hover-shadow transition">
+                    <div class="card-body text-center py-4">
+                        <div class="h5 mb-0 text-primary">@tag.Name</div>
+                    </div>
+                </a>
+            </div>
+        }
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.getElementById('tagSearch').addEventListener('input', function(e) {
+            const searchText = e.target.value.toLowerCase();
+            document.querySelectorAll('.tag-card').forEach(card => {
+                const tagName = card.querySelector('.h5').innerText.toLowerCase();
+                card.style.display = tagName.includes(searchText) ? '' : 'none';
+            });
+        });
+    </script>
+}

@@ -46,6 +46,38 @@
                             <span asp-validation-for="Status" class="text-danger"></span>
                         </div>
 
+                        <div class="card bg-light mb-3">
+                            <div class="card-body">
+                                <label class="form-label fw-bold"><i class="bi bi-tags"></i> Керування тегами</label>
+
+                                <div class="d-flex flex-wrap gap-2 mb-3">
+                                    @if (Model.Tags != null && Model.Tags.Any())
+                                    {
+                                        @foreach (var tag in Model.Tags)
+                                        {
+                                            <span class="badge rounded-pill bg-white text-dark border d-inline-flex align-items-center px-2 py-1 shadow-sm">
+                                                @tag.Name
+                                                <button type="submit" asp-action="RemoveTag" asp-route-taskId="@Model.Id" asp-route-tagId="@tag.Id"
+                                                        class="btn-close ms-2" style="font-size: 0.5rem;" aria-label="Видалити"></button>
+                                            </span>
+                                        }
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted small">Тегів ще немає</span>
+                                    }
+                                </div>
+
+                                <div class="input-group input-group-sm">
+                                    <input type="text" name="tagName" class="form-control" placeholder="Назва тегу...">
+
+                                    <button type="submit" asp-action="AddTag" asp-route-taskId="@Model.Id" class="btn btn-outline-secondary">
+                                        <i class="bi bi-plus-circle"></i> Додати
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
                         <div class="d-flex justify-content-between mt-4">
                             <a asp-action="Index" asp-route-todolistId="@Model.TodoListId"
                                class="btn btn-outline-secondary">Скасувати</a>

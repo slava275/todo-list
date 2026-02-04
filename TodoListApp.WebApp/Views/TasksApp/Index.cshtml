@@ -2,7 +2,6 @@
 
 @{
     ViewData["Title"] = "Tasks";
-    // Використовуємо todolistId для всіх посилань на цій сторінці
     var todolistId = ViewBag.TodoListId;
 }
 
@@ -15,7 +14,6 @@
             <h2>@ViewData["Title"]</h2>
         </div>
 
-        @* Найнадійніший спосіб посилання на створення завдання *@
         <a href="/TasksApp/Create/@todolistId" class="btn btn-success">
             <i class="bi bi-plus-circle"></i> Додати завдання
         </a>
@@ -50,12 +48,29 @@
                             <tr class="@(isOverdue ? "table-danger" : "")">
                                 <td>@task.Id</td>
                                 <td>
-                                    <span class="@(task.Status.ToString() == "Completed" ? "text-muted text-decoration-line-through" : "")">
-                                        @task.Title
-                                    </span>
+                                    <div class="d-flex flex-column">
+                                        <span class="@(task.Status.ToString() == "Completed" ? "text-muted text-decoration-line-through" : "fw-bold")">
+                                            @task.Title
+                                        </span>
+
+                                        @if (task.Tags != null && task.Tags.Any())
+                                        {
+                                            <div class="d-flex flex-wrap gap-1 mt-1">
+                                                @foreach (var tag in task.Tags)
+                                                {
+                                                    <a asp-controller="TagsApp" asp-action="Filter" asp-route-tagId="@tag.Id" asp-route-tagName="@tag.Name"
+                                                       class="badge rounded-pill bg-light text-primary border text-decoration-none shadow-sm"
+                                                       style="font-size: 0.7rem;">
+                                                        <i class="bi bi-tag-fill small"></i> @tag.Name
+                                                    </a>
+                                                }
+                                            </div>
+                                        }
+                                    </div>
+
                                     @if (isOverdue)
                                     {
-                                        <span class="badge bg-danger ms-2"><i class="bi bi-clock-history"></i> Протерміновано</span>
+                                        <span class="badge bg-danger mt-1"><i class="bi bi-clock-history"></i> Протерміновано</span>
                                     }
                                 </td>
                                 <td><small class="text-muted">@task.Description</small></td>
