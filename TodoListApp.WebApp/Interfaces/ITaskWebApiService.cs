@@ -1,3 +1,4 @@
+using TodoListShared.Models;
 using TodoListShared.Models.Models;
 
 namespace TodoListApp.WebApp.Interfaces;
@@ -13,4 +14,6 @@ public interface ITaskWebApiService
     Task<IEnumerable<TaskModel>> GetAllByListIdAsync(int listId);
 
     Task<TaskModel> GetByIdAsync(int id);
+
+    Task<IEnumerable<TaskModel>> GetAllByUserIdAsync(Statuses? status = null, string sortBy = "name", bool isAscending = true);
 }

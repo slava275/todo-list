@@ -1,6 +1,7 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using TodoListApp.WebApp.Interfaces;
+using TodoListShared.Models;
 using TodoListShared.Models.Models;
 
 namespace TodoListApp.WebApp.Services;
@@ -60,5 +61,25 @@ public class TaskWebApiService : ITaskWebApiService
         var response = await this.client.PutAsJsonAsync($"tasks/{model.Id}", model, this.options);
 
         response.EnsureSuccessStatusCode();
+    }
+
+    public async Task<IEnumerable<TaskModel>> GetAllByUserIdAsync(Statuses? status = null, string sortBy = "name", bool isAscending = true)
+    {
+        var url = $"tasks/assigned?sortBy={sortBy}&isAscending={isAscending}";
+
+        if (status.HasValue)
+        {
+            url += $"&status={status.Value}";
+        }
+
+        try
+        {
+            var response = await this.client.GetFromJsonAsync<IEnumerable<TaskModel>>(url, this.options);
+            return response ?? Enumerable.Empty<TaskModel>();
+        }
+        catch (HttpRequestException)
+        {
+            return Enumerable.Empty<TaskModel>();
+        }
     }
 }

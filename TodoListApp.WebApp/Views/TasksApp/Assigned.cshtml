@@ -1,0 +1,112 @@
+@using TodoListShared.Models.Models
+@model IEnumerable<TaskModel>
+
+@{
+    ViewData["Title"] = "Мої завдання";
+    var currentStatus = ViewBag.CurrentFilter as Statuses?;
+    var currentSort = ViewBag.CurrentSort as string;
+    var currentIsAscending = (bool)ViewBag.CurrentIsAscending;
+}
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="bi bi-person-badge"></i> @ViewData["Title"]</h2>
+        <span class="badge bg-secondary">Усього: @Model.Count()</span>
+    </div>
+
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <form asp-action="Assigned" method="get" class="row g-3 align-items-end">
+
+                <div class="col-md-4">
+                    <label class="form-label fw-bold">Статус (US12):</label>
+                    <select name="statusFilter" class="form-select" onchange="this.form.submit()">
+                        <option value="">Всі завдання (US11)</option>
+                        @foreach (var status in Enum.GetValues(typeof(Statuses)))
+                        {
+                            <option value="@status" selected="@(currentStatus != null && currentStatus == (Statuses)status)">
+                                @status
+                            </option>
+                        }
+                    </select>
+                </div>
+
+                <div class="col-md-3">
+                    <label class="form-label fw-bold">Сортувати за (US13):</label>
+                    <select name="sortBy" class="form-select" onchange="this.form.submit()">
+                        <option value="name" selected="@(currentSort == "name")">Назва</option>
+                        <option value="dueDate" selected="@(currentSort == "dueDate")">Дата завершення</option>
+                    </select>
+                </div>
+
+                <div class="col-md-3">
+                    <label class="form-label fw-bold">Порядок:</label>
+                    <select name="isAscending" class="form-select" onchange="this.form.submit()">
+                        <option value="true" selected="@(currentIsAscending == true)">Зростання</option>
+                        <option value="false" selected="@(currentIsAscending == false)">Спадання</option>
+                    </select>
+                </div>
+
+                <div class="col-md-2 text-end">
+                    <a asp-action="Assigned" class="btn btn-outline-secondary w-100">Скинути</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    @if (!Model.Any())
+    {
+        <div class="alert alert-info shadow-sm text-center">
+            <i class="bi bi-search"></i> Завдань за вказаними критеріями не знайдено.
+        </div>
+    }
+    else
+    {
+        <div class="card shadow-sm">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Назва</th>
+                            <th>Дедлайн</th>
+                            <th>Статус</th>
+                            <th class="text-end">Дії</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var task in Model)
+                        {
+                            <tr>
+                                <td>
+                                    <div class="fw-bold">@task.Title</div>
+                                    <div class="small text-muted text-truncate" style="max-width: 300px;">@task.Description</div>
+                                </td>
+                                <td>
+                                    <span class="@(task.DueDate < DateTime.Now && task.Status.ToString() != "Completed" ? "text-danger fw-bold" : "")">
+                                        @task.DueDate?.ToString("dd.MM.yyyy")
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="badge @(task.Status.ToString() == "Completed" ? "bg-success" : "bg-primary")">
+                                        @task.Status
+                                    </span>
+                                </td>
+                                <td class="text-end">
+                                    <div class="btn-group">
+                                        <a asp-action="Details" asp-route-id="@task.Id" class="btn btn-sm btn-outline-info ms-1">
+                                            <i class="bi bi-eye"></i>Details
+                                        </a>
+
+                                        <a asp-action="Edit" asp-route-id="@task.Id" class="btn btn-outline-secondary btn-sm m-2">
+                                            <i class="bi bi-pencil"></i>Edit
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+</div>

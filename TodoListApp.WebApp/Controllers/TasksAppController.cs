@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using TodoListApp.WebApp.Interfaces;
+using TodoListShared.Models;
 using TodoListShared.Models.Models;
 
 namespace TodoListApp.WebApp.Controllers;
@@ -122,5 +123,19 @@ public class TasksAppController : Controller
         }
 
         return this.View(task);
+    }
+
+    [HttpGet("Assigned")]
+    public async Task<IActionResult> Assigned(Statuses? statusFilter, string sortBy = "name", bool isAscending = true)
+    {
+        Statuses? filter = statusFilter;
+
+        var tasks = await this.service.GetAllByUserIdAsync(filter, sortBy, isAscending);
+
+        this.ViewBag.CurrentFilter = filter;
+        this.ViewBag.CurrentSort = sortBy;
+        this.ViewBag.CurrentIsAscending = isAscending;
+
+        return this.View(tasks);
     }
 }
