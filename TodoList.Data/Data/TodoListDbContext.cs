@@ -1,9 +1,10 @@
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using TodoList.Data.Entities;
 
 namespace TodoList.Data.Data;
 
-public class TodoListDbContext : DbContext
+public class TodoListDbContext : IdentityDbContext<ApplicationUser>
 {
     public TodoListDbContext(DbContextOptions<TodoListDbContext> options)
         : base(options)
@@ -18,13 +19,15 @@ public class TodoListDbContext : DbContext
 
     public DbSet<CommentEntity> Comments => this.Set<CommentEntity>();
 
-    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    protected override void OnModelCreating(ModelBuilder builder)
     {
-        modelBuilder.Entity<TaskEntity>()
+        base.OnModelCreating(builder);
+
+        builder.Entity<TaskEntity>()
             .Property(e => e.Status)
             .HasConversion<string>();
 
-        modelBuilder.Entity<TaskEntity>()
+        builder.Entity<TaskEntity>()
             .HasMany(t => t.Tags)
             .WithMany(t => t.Tasks)
             .UsingEntity(j => j.ToTable("TaskTags"));

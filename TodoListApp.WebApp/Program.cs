@@ -28,6 +28,13 @@ builder.Services.AddHttpClient<ICommentWebApiService, CommentsWebApiService>(cli
     client.BaseAddress = new Uri(apiUrl!);
 });
 
+builder.Services.AddHttpContextAccessor();
+
+builder.Services.AddHttpClient<IAuthService, AuthService>(client =>
+{
+    client.BaseAddress = new Uri(apiUrl!);
+});
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
