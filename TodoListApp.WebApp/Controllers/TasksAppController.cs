@@ -10,11 +10,13 @@ public class TasksAppController : Controller
 {
     private readonly ITaskWebApiService service;
     private readonly ITagWebApiService tagService;
+    private readonly ICommentWebApiService commentService;
 
-    public TasksAppController(ITaskWebApiService service, ITagWebApiService tagService)
+    public TasksAppController(ITaskWebApiService service, ITagWebApiService tagService, ICommentWebApiService commentService)
     {
         this.service = service;
         this.tagService = tagService;
+        this.commentService = commentService;
     }
 
     [HttpGet("List/{todolistId}")]
@@ -153,7 +155,7 @@ public class TasksAppController : Controller
         return this.View(results);
     }
 
-    [HttpPost]
+    [HttpPost("AddTag")]
     public async Task<IActionResult> AddTag(int taskId, string tagName)
     {
         if (!string.IsNullOrWhiteSpace(tagName))
@@ -170,5 +172,47 @@ public class TasksAppController : Controller
         await this.tagService.RemoveTagFromTaskAsync(taskId, tagId);
 
         return this.RedirectToAction("Edit", new { id = taskId });
+    }
+
+    [HttpPost("AddComment")]
+    public async Task<IActionResult> AddComment(int taskId, string commentText)
+    {
+        if (string.IsNullOrWhiteSpace(commentText))
+        {
+            return this.RedirectToAction("Details", new { id = taskId });
+        }
+
+        var newComment = new CommentModel
+        {
+            TaskId = taskId,
+            Text = commentText,
+            CreatedAt = DateTime.Now,
+        };
+
+        await this.commentService.AddAsync(newComment);
+        return this.RedirectToAction("Details", new { id = taskId });
+    }
+
+    [HttpPost("DeleteComment")]
+    public async Task<IActionResult> DeleteComment(int commentId, int taskId)
+    {
+        await this.commentService.DeleteAsync(commentId);
+        return this.RedirectToAction("Details", new { id = taskId });
+    }
+
+    [HttpPost("EditComment")]
+    public async Task<IActionResult> EditComment(int commentId, int taskId, string newText)
+    {
+        if (!string.IsNullOrWhiteSpace(newText))
+        {
+            await this.commentService.UpdateAsync(new CommentModel
+            {
+                Id = commentId,
+                Text = newText,
+                TaskId = taskId,
+            });
+        }
+
+        return this.RedirectToAction(nameof(Details), new { id = taskId });
     }
 }

@@ -14,7 +14,7 @@
 
         <div class="col-md-2 d-flex align-items-end gap-2">
             <a asp-action="Search" class="btn btn-primary flex-grow-1" title="Очистити фільтри">
-                <i class="bi bi-x-circle"></i>Search
+                <i class="bi"></i>Search
             </a>
         </div>
         <span class="badge bg-secondary">Усього: @Model.Count()</span>
@@ -100,11 +100,11 @@
                                 <td class="text-end">
                                     <div class="btn-group">
                                         <a asp-action="Details" asp-route-id="@task.Id" class="btn btn-sm btn-outline-info ms-1">
-                                            <i class="bi bi-eye"></i>Details
+                                            <i class="bi bi-eye"></i>
                                         </a>
 
                                         <a asp-action="Edit" asp-route-id="@task.Id" class="btn btn-outline-secondary btn-sm m-2">
-                                            <i class="bi bi-pencil"></i>Edit
+                                            <i class="bi bi-pencil"></i>
                                         </a>
                                     </div>
                                 </td>
