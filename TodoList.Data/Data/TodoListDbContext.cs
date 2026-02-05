@@ -16,6 +16,8 @@ public class TodoListDbContext : DbContext
 
     public DbSet<TagEntity> Tags => this.Set<TagEntity>();
 
+    public DbSet<CommentEntity> Comments => this.Set<CommentEntity>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<TaskEntity>()

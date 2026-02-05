@@ -15,7 +15,6 @@
                     <form asp-action="Edit" method="post">
                         <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
 
-                        @* Приховані поля, щоб не загубити ID та зв'язок зі списком *@
                         <input type="hidden" asp-for="Id" />
                         <input type="hidden" asp-for="TodoListId" />
 

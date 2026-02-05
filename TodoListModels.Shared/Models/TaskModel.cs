@@ -23,4 +23,6 @@ public class TaskModel
     public bool IsOverdue => !this.IsCompleted && this.DueDate.HasValue && this.DueDate.Value < DateTime.UtcNow;
 
     public ICollection<TagModel> Tags { get; set; } = [];
+
+    public List<CommentModel> Comments { get; set; } = [];
 }

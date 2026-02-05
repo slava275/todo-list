@@ -24,6 +24,7 @@ public class TaskDatabaseService : ITaskDatabaseService
     {
         var entities = await this.context.Tasks
             .Include(t => t.Tags)
+            .Include(t => t.Comments)
             .Where(t => t.TodoListId == todoListId)
             .ToListAsync();
 
@@ -71,12 +72,16 @@ public class TaskDatabaseService : ITaskDatabaseService
 
     public async Task<IEnumerable<TaskModel>> GetAllAsync()
     {
-        return this.mapper.Map<IEnumerable<TaskModel>>(await this.context.Tasks.Include(t => t.Tags).ToListAsync());
+        return this.mapper.Map<IEnumerable<TaskModel>>(await this.context.Tasks.Include(t => t.Tags)
+                        .Include(t => t.Comments)
+                        .ToListAsync());
     }
 
     public async Task<TaskModel?> GetByIdAsync(int id)
     {
-        return this.mapper.Map<TaskModel?>(await this.context.Tasks.Include(t => t.Tags).FirstOrDefaultAsync(t => t.Id == id));
+        return this.mapper.Map<TaskModel?>(await this.context.Tasks.Include(t => t.Tags)
+                        .Include(t => t.Comments)
+                        .FirstOrDefaultAsync(t => t.Id == id));
     }
 
     public async Task UpdateAsync(TaskModel item)
@@ -148,7 +153,7 @@ public class TaskDatabaseService : ITaskDatabaseService
 
     public async Task<IEnumerable<TaskModel>> SerchTasksAsync(string? title, DateTime? dueDate, DateTime? createdAt)
     {
-        var query = this.context.Tasks.Include(t => t.Tags).AsQueryable();
+        var query = this.context.Tasks.Include(t => t.Tags).Include(t => t.Comments).AsQueryable();
 
         if (!string.IsNullOrWhiteSpace(title))
         {

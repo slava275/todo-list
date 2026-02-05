@@ -18,6 +18,12 @@ public class AutomapperProfile : Profile
             .ForMember(dest => dest.Tags, opt => opt.MapFrom(src => src.Tags));
 
         this.CreateMap<TaskModel, TaskEntity>()
-            .ForMember(dest => dest.Tags, opt => opt.Ignore());
+            .ForMember(dest => dest.Tags, opt => opt.Ignore())
+            .ForMember(dest => dest.Comments, opt => opt.Ignore());
+
+        this.CreateMap<CommentEntity, CommentModel>()
+            .ReverseMap()
+            .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
+            .ForMember(dest => dest.UserId, opt => opt.Ignore());
     }
 }

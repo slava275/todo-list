@@ -35,5 +35,7 @@ public class TaskEntity
 
     public ICollection<TagEntity> Tags { get; set; } = [];
 
+    public virtual ICollection<CommentEntity> Comments { get; set; } = [];
+
     public TodoListEntity? TodoList { get; set; }
 }
