@@ -1,9 +1,12 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using TodoListApp.WebApp.Helpers;
 using TodoListApp.WebApp.Interfaces;
 using TodoListShared.Models.Models;
 
 namespace TodoListApp.WebApp.Controllers;
 
+[AllowAnonymous]
 [Route("AccountApp")]
 public class AccountAppController : Controller
 {
@@ -17,6 +20,11 @@ public class AccountAppController : Controller
     [HttpGet("Login")]
     public IActionResult Login()
     {
+        if (this.Request.Cookies.ContainsKey("jwtToken"))
+        {
+            return this.RedirectToAction("Index", "TodoList");
+        }
+
         return this.View();
     }
 
@@ -63,6 +71,7 @@ public class AccountAppController : Controller
         return this.View(model);
     }
 
+    [JwtAuthorize]
     [HttpPost("Logout")]
     public async Task<ActionResult> Logout()
     {

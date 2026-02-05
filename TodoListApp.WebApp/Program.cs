@@ -1,3 +1,4 @@
+using TodoListApp.WebApp.Handlers;
 using TodoListApp.WebApp.Interfaces;
 using TodoListApp.WebApp.Services;
 
@@ -5,28 +6,34 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllersWithViews();
 
+builder.Services.AddTransient<JwtHeaderHandler>();
+
 var apiUrl = builder.Configuration.GetValue<string>("ApiSettings:BaseUrl");
 
 builder.Services.AddHttpClient<ITodoListWebApiService, TodoListWebApiService>(client =>
 {
     client.BaseAddress = new Uri(apiUrl!);
     client.DefaultRequestHeaders.Add("Accept", "application/json");
-});
+})
+    .AddHttpMessageHandler<JwtHeaderHandler>();
 
 builder.Services.AddHttpClient<ITaskWebApiService, TaskWebApiService>(client =>
 {
     client.BaseAddress = new Uri(apiUrl!);
-});
+})
+    .AddHttpMessageHandler<JwtHeaderHandler>();
 
 builder.Services.AddHttpClient<ITagWebApiService, TagWebApiService>(client =>
 {
     client.BaseAddress = new Uri(apiUrl!);
-});
+})
+    .AddHttpMessageHandler<JwtHeaderHandler>();
 
 builder.Services.AddHttpClient<ICommentWebApiService, CommentsWebApiService>(client =>
 {
     client.BaseAddress = new Uri(apiUrl!);
-});
+})
+    .AddHttpMessageHandler<JwtHeaderHandler>();
 
 builder.Services.AddHttpContextAccessor();
 

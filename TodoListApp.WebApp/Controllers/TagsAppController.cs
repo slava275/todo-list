@@ -1,8 +1,10 @@
 using Microsoft.AspNetCore.Mvc;
+using TodoListApp.WebApp.Helpers;
 using TodoListApp.WebApp.Interfaces;
 
 namespace TodoListApp.WebApp.Controllers;
 
+[JwtAuthorize]
 public class TagsAppController : Controller
 {
     private readonly ITagWebApiService tagService;

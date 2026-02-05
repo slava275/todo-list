@@ -1,9 +1,11 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using TodoListApp.Interfaces;
 using TodoListShared.Models.Models;
 
 namespace TodoListApp.Controllers;
 
+[Authorize]
 [ApiController]
 [Route("api/[controller]")]
 public class TodoListsController : ControllerBase

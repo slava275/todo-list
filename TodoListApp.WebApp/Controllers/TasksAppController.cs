@@ -1,10 +1,12 @@
 using Microsoft.AspNetCore.Mvc;
+using TodoListApp.WebApp.Helpers;
 using TodoListApp.WebApp.Interfaces;
 using TodoListShared.Models;
 using TodoListShared.Models.Models;
 
 namespace TodoListApp.WebApp.Controllers;
 
+[JwtAuthorize]
 [Route("TasksApp")]
 public class TasksAppController : Controller
 {

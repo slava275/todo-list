@@ -1,9 +1,11 @@
 using Microsoft.AspNetCore.Mvc;
+using TodoListApp.WebApp.Helpers;
 using TodoListApp.WebApp.Interfaces;
 using TodoListShared.Models.Models;
 
 namespace TodoListApp.WebApp.Controllers;
 
+[JwtAuthorize]
 public class TodoListController : Controller
 {
     private readonly ITodoListWebApiService service;
