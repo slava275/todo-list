@@ -9,6 +9,7 @@ using TodoList.Data.Entities;
 using TodoListApp.Interfaces;
 using TodoListApp.Mappings;
 using TodoListApp.Services;
+using TodoListShared.Models.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -40,6 +41,9 @@ builder.Services.AddScoped<ITaskDatabaseService, TaskDatabaseService>();
 builder.Services.AddScoped<ITagDatabaseService, TagDatabaseService>();
 builder.Services.AddScoped<ICommentDatabaseService, CommentDatabaseService>();
 builder.Services.AddScoped<IAccountService, AccountDatabaseService>();
+
+builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
+builder.Services.AddTransient<IEmailService, EmailService>();
 
 var jwtKey = builder.Configuration["Jwt:Key"];
 var keyBytes = Encoding.UTF8.GetBytes(jwtKey!);

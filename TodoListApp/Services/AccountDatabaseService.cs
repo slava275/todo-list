@@ -52,6 +52,33 @@ public class AccountDatabaseService : IAccountService
         return await this.userManager.CreateAsync(user, model.Password);
     }
 
+    public async Task<string?> VerifyEmailAndGenerateToken(VerifyEmailViewModel model)
+    {
+        ArgumentNullException.ThrowIfNull(model);
+
+        var user = await this.userManager.FindByEmailAsync(model.Email);
+        if (user == null)
+        {
+            return null;
+        }
+
+        var token = await this.userManager.GeneratePasswordResetTokenAsync(user);
+
+        return token;
+    }
+
+    public async Task<IdentityResult> ResetPasswordAsync(ChangePasswordViewModel model)
+    {
+        ArgumentNullException.ThrowIfNull(model);
+        var user = await this.userManager.FindByEmailAsync(model.Email);
+        if (user == null)
+        {
+            return IdentityResult.Failed(new IdentityError { Description = "User not found." });
+        }
+
+        return await this.userManager.ResetPasswordAsync(user, model.Token, model.NewPassword);
+    }
+
     private string GenerateJwtToken(ApplicationUser user)
     {
         var securityKey = new SymmetricSecurityKey(System.Text.Encoding.UTF8.GetBytes(this.config["Jwt:Key"] !));

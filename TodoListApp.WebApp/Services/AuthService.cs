@@ -65,4 +65,20 @@ public class AuthService : IAuthService
 
         return response.IsSuccessStatusCode;
     }
+
+    public async Task<bool> VerifyEmail(VerifyEmailViewModel model)
+    {
+        ArgumentNullException.ThrowIfNull(model);
+
+        var response = await this.client.PostAsJsonAsync("account/verifyEmail", model, this.options);
+
+        return response.IsSuccessStatusCode;
+    }
+
+    public async Task<bool> ResetPasswordAsync(ChangePasswordViewModel model)
+    {
+        ArgumentNullException.ThrowIfNull(model);
+        var response = await this.client.PostAsJsonAsync("account/resetPassword", model, this.options);
+        return response.IsSuccessStatusCode;
+    }
 }

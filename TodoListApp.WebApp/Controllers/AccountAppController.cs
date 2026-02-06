@@ -78,4 +78,70 @@ public class AccountAppController : Controller
         await this.authService.LogoutAsync();
         return this.RedirectToAction("Login");
     }
+
+    [HttpGet("EmailSent")]
+    public IActionResult EmailSent()
+    {
+        return this.View();
+    }
+
+    [HttpGet("ConfirmEmail")]
+    public IActionResult VerifyEmail()
+    {
+        return this.View();
+    }
+
+    [HttpPost("ConfirmEmail")]
+    public async Task<IActionResult> VerifyEmail(VerifyEmailViewModel model)
+    {
+        if (!this.ModelState.IsValid)
+        {
+            return this.View(model);
+        }
+
+        var result = await this.authService.VerifyEmail(model);
+
+        if (result)
+        {
+            return this.RedirectToAction("EmailSent");
+        }
+
+        this.ModelState.AddModelError("Email", "Користувача з такою електронною адресою не знайдено.");
+        return this.View(model);
+    }
+
+    [HttpGet("ChangePassword")]
+    public IActionResult ChangePassword(string token, string email)
+    {
+        if (string.IsNullOrEmpty(token) || string.IsNullOrEmpty(email))
+        {
+            return this.RedirectToAction("Login");
+        }
+
+        var model = new ChangePasswordViewModel
+        {
+            Token = token,
+            Email = email,
+        };
+        return this.View(model);
+    }
+
+    [HttpPost("ChangePassword")]
+    public async Task<IActionResult> ChangePassword(ChangePasswordViewModel model)
+    {
+        if (!this.ModelState.IsValid)
+        {
+            return this.View(model);
+        }
+
+        var result = await this.authService.ResetPasswordAsync(model);
+        if (result)
+        {
+            this.TempData["SuccessMessage"] = "Пароль успішно змінено. Тепер ви можете увійти.";
+            return this.RedirectToAction("Login");
+        }
+
+        this.ModelState.AddModelError("error", "Помилка при зміні пароля. Можливо, посилання застаріло.");
+        return this.View(model);
+    }
 }
