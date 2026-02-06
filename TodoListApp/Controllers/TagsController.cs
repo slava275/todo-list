@@ -1,5 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using TodoListApp.Exceptions;
+using TodoListApp.Extensions;
 using TodoListApp.Interfaces;
 using TodoListShared.Models.Models;
 
@@ -17,78 +19,77 @@ public class TagsController : ControllerBase
         this.tagService = tagService;
     }
 
-    // US18: Отримати всі мої теги
+    private string UserId => this.User.GetUserId();
+
     [HttpGet]
     public async Task<ActionResult<IEnumerable<TagModel>>> GetAll()
     {
-        try
-        {
-            int userId = 0;
-            var tags = await this.tagService.GetAllTagsAsync(userId);
-            return this.Ok(tags);
-        }
-        catch (ArgumentOutOfRangeException ex)
-        {
-            return this.BadRequest(ex.Message);
-        }
+        var tags = await this.tagService.GetAllTagsAsync(this.UserId);
+        return this.Ok(tags ?? Enumerable.Empty<TagModel>());
     }
 
-    // US20: Додати тег до завдання
     [HttpPost("{taskId}")]
     public async Task<IActionResult> AddTag(int taskId, [FromBody] TagModel model)
     {
         if (model == null || string.IsNullOrWhiteSpace(model.Name))
         {
-            return this.BadRequest("Tag name is required.");
+            return this.BadRequest();
         }
 
         try
         {
-            int userId = 0;
-            await this.tagService.AddTagToTaskAsync(taskId, model, userId);
+            await this.tagService.AddTagToTaskAsync(taskId, model, this.UserId);
             return this.Ok();
         }
-        catch (InvalidOperationException ex)
+        catch (EntityNotFoundException ex)
         {
             return this.NotFound(ex.Message);
         }
-        catch (ArgumentOutOfRangeException ex)
+        catch (AccessDeniedException ex)
+        {
+            return this.StatusCode(StatusCodes.Status403Forbidden, ex.Message);
+        }
+        catch (ArgumentException ex)
         {
             return this.BadRequest(ex.Message);
         }
     }
 
-    // US19: Завдання за тегом
     [HttpGet("{tagId}/tasks")]
     public async Task<ActionResult<IEnumerable<TaskModel>>> GetTasksByTag(int tagId)
     {
         try
         {
-            int userId = 0;
-            var tasks = await this.tagService.GetTasksByTagIdAsync(tagId, userId);
-            return this.Ok(tasks);
+            var tasks = await this.tagService.GetTasksByTagIdAsync(tagId, this.UserId);
+            return this.Ok(tasks ?? Enumerable.Empty<TaskModel>());
         }
-        catch (ArgumentOutOfRangeException ex)
+        catch (EntityNotFoundException ex)
+        {
+            return this.NotFound(ex.Message);
+        }
+        catch (ArgumentException ex)
         {
             return this.BadRequest(ex.Message);
         }
     }
 
-    // US21: Видалити тег з завдання
     [HttpDelete("{taskId}/{tagId}")]
     public async Task<IActionResult> RemoveTag(int taskId, int tagId)
     {
         try
         {
-            int userId = 0;
-            await this.tagService.RemoveTagFromTaskAsync(taskId, tagId, userId);
+            await this.tagService.RemoveTagFromTaskAsync(taskId, tagId, this.UserId);
             return this.NoContent();
         }
-        catch (InvalidOperationException ex)
+        catch (EntityNotFoundException ex)
         {
             return this.NotFound(ex.Message);
         }
-        catch (ArgumentOutOfRangeException ex)
+        catch (AccessDeniedException ex)
+        {
+            return this.StatusCode(StatusCodes.Status403Forbidden, ex.Message);
+        }
+        catch (ArgumentException ex)
         {
             return this.BadRequest(ex.Message);
         }

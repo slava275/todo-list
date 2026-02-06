@@ -24,7 +24,12 @@ public class TagWebApiService : ITagWebApiService
     {
         var response = await this.client.PostAsJsonAsync($"tags/{taskId}", model, this.options);
 
-        response.EnsureSuccessStatusCode();
+        if (!response.IsSuccessStatusCode)
+        {
+            var errorContent = await response.Content.ReadAsStringAsync();
+
+            throw new HttpRequestException(errorContent);
+        }
     }
 
     public async Task<IEnumerable<TagModel>> GetAllTagsAsync()
@@ -41,6 +46,11 @@ public class TagWebApiService : ITagWebApiService
     {
         var response = await this.client.DeleteAsync($"tags/{taskId}/{tagId}");
 
-        response.EnsureSuccessStatusCode();
+        if (!response.IsSuccessStatusCode)
+        {
+            var errorContent = await response.Content.ReadAsStringAsync();
+
+            throw new HttpRequestException(errorContent);
+        }
     }
 }

@@ -17,7 +17,10 @@ public class TaskEntity
     public string Description { get; set; } = string.Empty;
 
     [Required]
-    public int UserId { get; set; }
+    public string AssigneeId { get; set; }
+
+    [Required]
+    public string CreatorId { get; set; }
 
     [ForeignKey("TodoList")]
     public int TodoListId { get; set; }

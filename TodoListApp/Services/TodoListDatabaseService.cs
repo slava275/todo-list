@@ -2,6 +2,7 @@ using AutoMapper;
 using Microsoft.EntityFrameworkCore;
 using TodoList.Data.Data;
 using TodoList.Data.Entities;
+using TodoListApp.Exceptions;
 using TodoListApp.Interfaces;
 using TodoListShared.Models.Models;
 
@@ -18,78 +19,102 @@ public class TodoListDatabaseService : ITodoListDatabaseService
         this.mapper = mapper;
     }
 
-    public async Task CreateAsync(TodoListModel item)
+    // US02: Створення списку з автоматичним призначенням Owner
+    public async Task CreateAsync(TodoListModel item, string userId)
     {
         ArgumentNullException.ThrowIfNull(item);
 
         var entity = this.mapper.Map<TodoListEntity>(item);
-
         this.context.TodoLists.Add(entity);
+        await this.context.SaveChangesAsync();
+
+        var membership = new TodoListMember
+        {
+            TodoListId = entity.Id,
+            UserId = userId,
+            Role = TodoListRole.Owner,
+        };
+
+        this.context.TodoListMembers.Add(membership);
         await this.context.SaveChangesAsync();
     }
 
-    public async Task DeleteAsync(TodoListModel todoListModel)
+    // US03: Видалити список може тільки Owner
+    public async Task DeleteByIdAsync(int id, string userId)
     {
-        var entity = this.mapper.Map<TodoListEntity>(todoListModel);
+        var listExists = await this.context.TodoLists.AnyAsync(t => t.Id == id);
+        if (!listExists)
+        {
+            throw new EntityNotFoundException($"Список справ з ID {id} не знайдено.");
+        }
+
+        var entity = await this.context.TodoLists
+            .FirstOrDefaultAsync(t => t.Id == id &&
+                this.context.TodoListMembers.Any(m => m.TodoListId == t.Id && m.UserId == userId && m.Role == TodoListRole.Owner));
+
+        if (entity == null)
+        {
+            throw new AccessDeniedException("Тільки власник може видалити цей список справ.");
+        }
+
         this.context.TodoLists.Remove(entity);
         await this.context.SaveChangesAsync();
     }
 
-    public async Task DeleteByIdAsync(int id)
-    {
-        if (id <= 0)
-        {
-            throw new ArgumentOutOfRangeException(nameof(id), "Id must be greater than zero.");
-        }
-
-        var entity = await this.context.TodoLists.FindAsync(id);
-
-        if (entity is not null)
-        {
-            this.context.TodoLists.Remove(entity);
-            await this.context.SaveChangesAsync();
-        }
-    }
-
-    public async Task<IEnumerable<TodoListModel>> GetAllAsync()
+    // US01: Бачити список усіх МОЇХ списків
+    public async Task<IEnumerable<TodoListModel>> GetAllAsync(string userId)
     {
         var entities = await this.context.TodoLists
             .Include(t => t.Tasks)
+            .Where(t => this.context.TodoListMembers.Any(m => m.TodoListId == t.Id && m.UserId == userId))
             .ToListAsync();
 
         return this.mapper.Map<IEnumerable<TodoListModel>>(entities);
     }
 
-    public async Task<TodoListModel?> GetByIdAsync(int id)
+    public async Task<TodoListModel?> GetByIdAsync(int id, string userId)
     {
-        if (id <= 0)
-        {
-            throw new ArgumentOutOfRangeException(nameof(id), "Id must be greater than zero.");
-        }
-
         var entity = await this.context.TodoLists
             .Include(t => t.Tasks)
-            .FirstOrDefaultAsync(x => x.Id == id);
+            .FirstOrDefaultAsync(x => x.Id == id &&
+                this.context.TodoListMembers.Any(m => m.TodoListId == x.Id && m.UserId == userId));
 
-        return entity is null ? null : this.mapper.Map<TodoListModel>(entity);
-    }
-
-    public async Task UpdateAsync(TodoListModel item)
-    {
-        if (item == null)
+        if (entity == null)
         {
-            throw new ArgumentNullException(nameof(item), "Item cannot be null.");
+            throw new EntityNotFoundException($"Список справ з ID {id} не знайдено або у вас немає доступу.");
         }
 
-        var existingEntity = await this.context.TodoLists.FindAsync(item.Id);
+        return this.mapper.Map<TodoListModel>(entity);
+    }
+
+    // US04: Редагувати властивості списку може тільки Owner
+    public async Task UpdateAsync(TodoListModel item, string userId)
+    {
+        ArgumentNullException.ThrowIfNull(item);
+
+        var listExists = await this.context.TodoLists.AnyAsync(t => t.Id == item.Id);
+        if (!listExists)
+        {
+            throw new EntityNotFoundException($"Список справ з ID {item.Id} не знайдено.");
+        }
+
+        var existingEntity = await this.context.TodoLists
+            .FirstOrDefaultAsync(t => t.Id == item.Id &&
+                this.context.TodoListMembers.Any(m => m.TodoListId == t.Id && m.UserId == userId && m.Role == TodoListRole.Owner));
 
         if (existingEntity == null)
         {
-            throw new KeyNotFoundException($"Task with ID {item.Id} not found.");
+            throw new AccessDeniedException("Тільки власник може редагувати налаштування цього списку.");
         }
 
         this.mapper.Map(item, existingEntity);
-
         await this.context.SaveChangesAsync();
+    }
+
+    public async Task DeleteAsync(TodoListModel todoListModel, string userId)
+    {
+        ArgumentException.ThrowIfNullOrEmpty(userId);
+        ArgumentNullException.ThrowIfNull(todoListModel);
+        await this.DeleteByIdAsync(todoListModel.Id, userId);
     }
 }

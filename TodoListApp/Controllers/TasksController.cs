@@ -1,5 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using TodoListApp.Exceptions;
+using TodoListApp.Extensions;
 using TodoListApp.Interfaces;
 using TodoListShared.Models;
 using TodoListShared.Models.Models;
@@ -18,103 +20,114 @@ public class TasksController : ControllerBase
         this.service = service;
     }
 
+    private string UserId => this.User.GetUserId();
+
     [HttpGet]
     public async Task<ActionResult<IEnumerable<TaskModel>>> GetAll()
     {
-        var tasks = await this.service.GetAllAsync();
-
-        if (tasks is null || !tasks.Any())
-        {
-            return this.NotFound("No todo lists found.");
-        }
-
-        return this.Ok(tasks);
+        var tasks = await this.service.GetAllAsync(this.UserId);
+        return this.Ok(tasks ?? Enumerable.Empty<TaskModel>());
     }
 
     [HttpGet("{id}")]
     public async Task<ActionResult<TaskModel>> GetById(int id)
     {
-        var task = await this.service.GetByIdAsync(id);
-        if (task is null)
+        try
         {
-            return this.NotFound($"Task with ID {id} not found.");
+            var task = await this.service.GetByIdAsync(id, this.UserId);
+            return this.Ok(task);
         }
-
-        return this.Ok(task);
+        catch (EntityNotFoundException ex)
+        {
+            return this.NotFound(ex.Message);
+        }
+        catch (AccessDeniedException ex)
+        {
+            return this.StatusCode(StatusCodes.Status403Forbidden, ex.Message);
+        }
     }
 
     [HttpPost]
     public async Task<ActionResult> Create([FromBody] TaskModel task)
     {
-        if (task is null)
+        if (task == null)
         {
-            return this.BadRequest("Task cannot be null.");
+            return this.BadRequest();
         }
 
-        await this.service.CreateAsync(task);
-        return this.CreatedAtAction(nameof(this.GetById), new { id = task.Id }, task);
+        try
+        {
+            await this.service.CreateAsync(task, this.UserId);
+            return this.CreatedAtAction(nameof(this.GetById), new { id = task.Id }, task);
+        }
+        catch (EntityNotFoundException ex)
+        {
+            // Наприклад, якщо вказано неіснуючий TodoListId
+            return this.NotFound(ex.Message);
+        }
+        catch (AccessDeniedException ex)
+        {
+            return this.StatusCode(StatusCodes.Status403Forbidden, ex.Message);
+        }
     }
 
     [HttpPut("{id}")]
     public async Task<ActionResult> Update(int id, [FromBody] TaskModel task)
     {
-        if (task is null || task.Id != id)
+        if (task == null || task.Id != id)
         {
-            return this.BadRequest("Invalid task data.");
+            return this.BadRequest();
         }
 
-        var existingTask = await this.service.GetByIdAsync(id);
-        if (existingTask is null)
+        try
         {
-            return this.NotFound($"Task with ID {id} not found.");
+            await this.service.UpdateAsync(task, this.UserId);
+            return this.NoContent();
         }
-
-        await this.service.UpdateAsync(task);
-        return this.NoContent();
+        catch (EntityNotFoundException ex)
+        {
+            return this.NotFound(ex.Message);
+        }
+        catch (AccessDeniedException ex)
+        {
+            return this.StatusCode(StatusCodes.Status403Forbidden, ex.Message);
+        }
     }
 
     [HttpDelete("{id}")]
     public async Task<ActionResult> Delete(int id)
     {
-        var existingTask = await this.service.GetByIdAsync(id);
-        if (existingTask is null)
+        try
         {
-            return this.NotFound($"Task with ID {id} not found.");
+            await this.service.DeleteByIdAsync(id, this.UserId);
+            return this.NoContent();
         }
-
-        await this.service.DeleteByIdAsync(id);
-        return this.NoContent();
+        catch (EntityNotFoundException ex)
+        {
+            return this.NotFound(ex.Message);
+        }
+        catch (AccessDeniedException ex)
+        {
+            return this.StatusCode(StatusCodes.Status403Forbidden, ex.Message);
+        }
     }
 
     [HttpGet("list/{todoListId}")]
     public async Task<ActionResult<IEnumerable<TaskModel>>> GetByTodoListId(int todoListId)
     {
-        var tasks = await this.service.GetByListIdAsync(todoListId);
-        if (tasks is null || !tasks.Any())
-        {
-            return this.NotFound($"No tasks found for Todo List with ID {todoListId}.");
-        }
-
-        return this.Ok(tasks);
+        // Сервіс повертає порожній список, якщо доступу немає
+        var tasks = await this.service.GetByListIdAsync(todoListId, this.UserId);
+        return this.Ok(tasks ?? Enumerable.Empty<TaskModel>());
     }
 
     [HttpGet("assigned")]
     public async Task<ActionResult<IEnumerable<TaskModel>>> GetAssignedTasks(
-    [FromQuery] Statuses? status,
-    [FromQuery] string sortBy = "name",
-    [FromQuery] bool isAscending = true)
+        [FromQuery] Statuses? status,
+        [FromQuery] string sortBy = "name",
+        [FromQuery] bool isAscending = true)
     {
-        // Тимчасово використовуємо hardcoded ID, поки не налаштуємо JWT Auth
-        int currentUserId = 0;
-
-        var tasks = await this.service.GetAssignedTasksAsync(currentUserId, status, sortBy, isAscending);
-
-        if (tasks == null || !tasks.Any())
-        {
-            return this.NotFound("No tasks assigned to you were found.");
-        }
-
-        return this.Ok(tasks);
+        var tasks = await this.service.GetAssignedTasksAsync(this.UserId, status, sortBy, isAscending);
+        return this.Ok(tasks ?? Enumerable.Empty<TaskModel>());
     }
 
     [HttpPatch("{id}/status")]
@@ -122,16 +135,16 @@ public class TasksController : ControllerBase
     {
         try
         {
-            await this.service.ChangeStatusAsync(id, newStatus);
+            await this.service.ChangeStatusAsync(id, newStatus, this.UserId);
             return this.NoContent();
         }
-        catch (KeyNotFoundException ex)
+        catch (EntityNotFoundException ex)
         {
             return this.NotFound(ex.Message);
         }
-        catch (ArgumentOutOfRangeException ex)
+        catch (AccessDeniedException ex)
         {
-            return this.BadRequest(ex.Message);
+            return this.StatusCode(StatusCodes.Status403Forbidden, ex.Message);
         }
         catch (ArgumentException ex)
         {
@@ -145,13 +158,7 @@ public class TasksController : ControllerBase
         [FromQuery] DateTime? dueDate,
         [FromQuery] DateTime? createdAt)
     {
-        var tasks = await this.service.SerchTasksAsync(title, dueDate, createdAt);
-
-        if (tasks is null || !tasks.Any())
-        {
-            return this.NotFound("No tasks matching the search criteria were found.");
-        }
-
-        return this.Ok(tasks);
+        var tasks = await this.service.SerchTasksAsync(title, dueDate, createdAt, this.UserId);
+        return this.Ok(tasks ?? Enumerable.Empty<TaskModel>());
     }
 }

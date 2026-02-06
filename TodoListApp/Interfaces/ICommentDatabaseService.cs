@@ -4,11 +4,15 @@ namespace TodoListApp.Interfaces;
 
 public interface ICommentDatabaseService
 {
-    Task<IEnumerable<CommentModel>> GetByTaskIdAsync(int taskId);
+    // US22: Отримати коментарі до таски (з перевіркою доступу до списку)
+    Task<IEnumerable<CommentModel>> GetByTaskIdAsync(int taskId, string userId);
 
-    Task AddAsync(CommentModel model);
+    // US23: Додати коментар (перевірка прав Owner або Editor)
+    Task AddAsync(CommentModel model, string userId);
 
-    Task DeleteAsync(int id);
+    // US24: Видалити коментар (тільки для Owner списку)
+    Task DeleteAsync(int id, string userId);
 
-    Task UpdateAsync(CommentModel model);
+    // US25: Редагувати коментар (тільки для Owner списку)
+    Task UpdateAsync(CommentModel model, string userId);
 }

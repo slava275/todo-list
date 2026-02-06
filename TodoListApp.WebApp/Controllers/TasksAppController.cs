@@ -1,3 +1,4 @@
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using TodoListApp.WebApp.Helpers;
 using TodoListApp.WebApp.Interfaces;
@@ -60,7 +61,7 @@ public class TasksAppController : Controller
         }
         catch (HttpRequestException ex)
         {
-            this.ModelState.AddModelError(string.Empty, $"Помилка: {ex.Message}");
+            this.TempData["ErrorMessage"] = $"Не вдалося видалити: {ex.Message}";
             return this.View(model);
         }
     }
@@ -74,8 +75,9 @@ public class TasksAppController : Controller
             await this.service.DeleteByIdAsync(id);
             return this.RedirectToAction("Index", new { todolistId = todolistId });
         }
-        catch (HttpRequestException)
+        catch (HttpRequestException ex)
         {
+            this.TempData["ErrorMessage"] = $"Не вдалося видалити: {ex.Message}";
             return this.RedirectToAction("Index", new { todolistId = todolistId });
         }
     }
@@ -114,8 +116,9 @@ public class TasksAppController : Controller
         }
         catch (HttpRequestException ex)
         {
-            this.ModelState.AddModelError(string.Empty, $"Помилка оновлення: {ex.Message}");
-            return this.View(model);
+            var newModel = await this.service.GetByIdAsync(model.Id);
+            this.TempData["ErrorMessage"] = $"Не вдалося відредагувати: {ex.Message}";
+            return this.View(newModel);
         }
     }
 
@@ -160,20 +163,36 @@ public class TasksAppController : Controller
     [HttpPost("AddTag")]
     public async Task<IActionResult> AddTag(int taskId, string tagName)
     {
-        if (!string.IsNullOrWhiteSpace(tagName))
+        try
         {
-            await this.tagService.AddTagToTaskAsync(taskId, new TagModel { Name = tagName.Trim() });
-        }
+            if (!string.IsNullOrWhiteSpace(tagName))
+            {
+                await this.tagService.AddTagToTaskAsync(taskId, new TagModel { Name = tagName.Trim() });
+            }
 
-        return this.RedirectToAction("Edit", new { id = taskId });
+            return this.RedirectToAction("Edit", new { id = taskId });
+        }
+        catch (HttpRequestException ex)
+        {
+            this.TempData["ErrorMessage"] = $"Не вдалося додати тег: {ex.Message}";
+            return this.RedirectToAction("Edit", new { id = taskId });
+        }
     }
 
     [HttpPost("RemoveTag")]
     public async Task<IActionResult> RemoveTag(int taskId, int tagId)
     {
-        await this.tagService.RemoveTagFromTaskAsync(taskId, tagId);
+        try
+        {
+            await this.tagService.RemoveTagFromTaskAsync(taskId, tagId);
 
-        return this.RedirectToAction("Edit", new { id = taskId });
+            return this.RedirectToAction("Edit", new { id = taskId });
+        }
+        catch (HttpRequestException ex)
+        {
+            this.TempData["ErrorMessage"] = $"Не вдалося видалити тег: {ex.Message}";
+            return this.RedirectToAction("Edit", new { id = taskId });
+        }
     }
 
     [HttpPost("AddComment")]
@@ -191,30 +210,54 @@ public class TasksAppController : Controller
             CreatedAt = DateTime.Now,
         };
 
-        await this.commentService.AddAsync(newComment);
-        return this.RedirectToAction("Details", new { id = taskId });
+        try
+        {
+            await this.commentService.AddAsync(newComment);
+            return this.RedirectToAction("Details", new { id = taskId });
+        }
+        catch (HttpRequestException ex)
+        {
+            this.TempData["ErrorMessage"] = $"Не вдалося додати: {ex.Message}";
+            return this.RedirectToAction("Details", new { id = taskId });
+        }
     }
 
     [HttpPost("DeleteComment")]
     public async Task<IActionResult> DeleteComment(int commentId, int taskId)
     {
-        await this.commentService.DeleteAsync(commentId);
-        return this.RedirectToAction("Details", new { id = taskId });
+        try
+        {
+            await this.commentService.DeleteAsync(commentId);
+            return this.RedirectToAction("Details", new { id = taskId });
+        }
+        catch (HttpRequestException ex)
+        {
+            this.TempData["ErrorMessage"] = $"Не вдалося видалити: {ex.Message}";
+            return this.RedirectToAction("Details", new { id = taskId });
+        }
     }
 
     [HttpPost("EditComment")]
     public async Task<IActionResult> EditComment(int commentId, int taskId, string newText)
     {
-        if (!string.IsNullOrWhiteSpace(newText))
+        try
         {
-            await this.commentService.UpdateAsync(new CommentModel
+            if (!string.IsNullOrWhiteSpace(newText))
             {
-                Id = commentId,
-                Text = newText,
-                TaskId = taskId,
-            });
-        }
+                await this.commentService.UpdateAsync(new CommentModel
+                {
+                    Id = commentId,
+                    Text = newText,
+                    TaskId = taskId,
+                });
+            }
 
-        return this.RedirectToAction(nameof(Details), new { id = taskId });
+            return this.RedirectToAction(nameof(this.Details), new { id = taskId });
+        }
+        catch (HttpRequestException ex)
+        {
+            this.TempData["ErrorMessage"] = $"Не вдалося змінити: {ex.Message}";
+            return this.RedirectToAction("Details", new { id = taskId });
+        }
     }
 }

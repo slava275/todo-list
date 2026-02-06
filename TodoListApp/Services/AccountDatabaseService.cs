@@ -86,7 +86,8 @@ public class AccountDatabaseService : IAccountService
 
         var claims = new[]
         {
-            new Claim(JwtRegisteredClaimNames.Sub, user.Email !),
+            new Claim(JwtRegisteredClaimNames.Sub, user.Id),
+            new Claim(JwtRegisteredClaimNames.Email, user.Email !),
             new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
             new Claim(ClaimTypes.NameIdentifier, user.Id),
             new Claim(ClaimTypes.Email, user.Email !),

@@ -19,6 +19,8 @@ public class TodoListDbContext : IdentityDbContext<ApplicationUser>
 
     public DbSet<CommentEntity> Comments => this.Set<CommentEntity>();
 
+    public DbSet<TodoListMember> TodoListMembers { get; set; }
+
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);

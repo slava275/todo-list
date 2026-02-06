@@ -1,5 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using TodoListApp.Exceptions;
+using TodoListApp.Extensions;
 using TodoListApp.Interfaces;
 using TodoListShared.Models.Models;
 
@@ -17,17 +19,19 @@ public class CommentsController : ControllerBase
         this.service = service;
     }
 
+    private string UserId => this.User.GetUserId();
+
     [HttpGet("tasks/{taskid}")]
     public async Task<ActionResult<IEnumerable<CommentModel>>> GetCommentsByTaskId(int taskid)
     {
         if (taskid <= 0)
         {
-            return this.BadRequest("TaskId must be greater than zero.");
+            return this.BadRequest();
         }
 
-        var comments = await this.service.GetByTaskIdAsync(taskid);
+        var comments = await this.service.GetByTaskIdAsync(taskid, this.UserId);
 
-        return this.Ok(comments);
+        return this.Ok(comments ?? Enumerable.Empty<CommentModel>());
     }
 
     [HttpPost]
@@ -35,11 +39,26 @@ public class CommentsController : ControllerBase
     {
         if (model == null)
         {
-            return this.BadRequest("Comment model cannot be null.");
+            return this.BadRequest();
         }
 
-        await this.service.AddAsync(model);
-        return this.Ok();
+        try
+        {
+            await this.service.AddAsync(model, this.UserId);
+            return this.Ok();
+        }
+        catch (EntityNotFoundException ex)
+        {
+            return this.NotFound(ex.Message);
+        }
+        catch (AccessDeniedException ex)
+        {
+            return this.StatusCode(StatusCodes.Status403Forbidden, ex.Message);
+        }
+        catch (ArgumentNullException ex)
+        {
+            return this.BadRequest(ex.Message);
+        }
     }
 
     [HttpPut]
@@ -47,11 +66,26 @@ public class CommentsController : ControllerBase
     {
         if (model == null)
         {
-            return this.BadRequest("Comment model cannot be null.");
+            return this.BadRequest();
         }
 
-        await this.service.UpdateAsync(model);
-        return this.NoContent();
+        try
+        {
+            await this.service.UpdateAsync(model, this.UserId);
+            return this.NoContent();
+        }
+        catch (EntityNotFoundException ex)
+        {
+            return this.NotFound(ex.Message);
+        }
+        catch (AccessDeniedException ex)
+        {
+            return this.StatusCode(StatusCodes.Status403Forbidden, ex.Message);
+        }
+        catch (ArgumentNullException ex)
+        {
+            return this.BadRequest(ex.Message);
+        }
     }
 
     [HttpDelete("{id}")]
@@ -59,10 +93,25 @@ public class CommentsController : ControllerBase
     {
         if (id <= 0)
         {
-            return this.BadRequest("Id must be greater than zero.");
+            return this.BadRequest();
         }
 
-        await this.service.DeleteAsync(id);
-        return this.NoContent();
+        try
+        {
+            await this.service.DeleteAsync(id, this.UserId);
+            return this.NoContent();
+        }
+        catch (EntityNotFoundException ex)
+        {
+            return this.NotFound(ex.Message);
+        }
+        catch (AccessDeniedException ex)
+        {
+            return this.StatusCode(StatusCodes.Status403Forbidden, ex.Message);
+        }
+        catch (ArgumentOutOfRangeException ex)
+        {
+            return this.BadRequest(ex.Message);
+        }
     }
 }

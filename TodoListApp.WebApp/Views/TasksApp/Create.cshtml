@@ -12,6 +12,13 @@
                 <div class="card-header bg-success text-white py-3">
                     <h4 class="mb-0"><i class="bi bi-clipboard-plus"></i> @ViewData["Title"]</h4>
                 </div>
+                @if (TempData["ErrorMessage"] != null)
+                {
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        @TempData["ErrorMessage"]
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                }
                 <div class="card-body p-4">
                     <form asp-action="Create" asp-route-todolistId="@Model.TodoListId" method="post">
                         <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>

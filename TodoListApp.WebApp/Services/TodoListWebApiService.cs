@@ -22,10 +22,7 @@ public class TodoListWebApiService : ITodoListWebApiService
 
     public async Task CreateAsync(TodoListModel model)
     {
-        if (model is null)
-        {
-            throw new ArgumentNullException(nameof(model));
-        }
+        ArgumentNullException.ThrowIfNull(model);
 
         await this.httpClient.PostAsJsonAsync("todolists", model);
     }
@@ -39,7 +36,12 @@ public class TodoListWebApiService : ITodoListWebApiService
 
         var response = await this.httpClient.DeleteAsync($"todolists/{id}");
 
-        response.EnsureSuccessStatusCode();
+        if (!response.IsSuccessStatusCode)
+        {
+            var errorMessage = await response.Content.ReadAsStringAsync();
+
+            throw new HttpRequestException(errorMessage);
+        }
     }
 
     public async Task<IEnumerable<TodoListModel>> GetAllAsync()
@@ -61,6 +63,11 @@ public class TodoListWebApiService : ITodoListWebApiService
 
         var response = await this.httpClient.PutAsJsonAsync($"todolists/{model.Id}", model, this.options);
 
-        response.EnsureSuccessStatusCode();
+        if (!response.IsSuccessStatusCode)
+        {
+            var errorContent = await response.Content.ReadAsStringAsync();
+
+            throw new HttpRequestException(errorContent);
+        }
     }
 }

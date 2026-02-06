@@ -40,6 +40,7 @@ public class AccountAppController : Controller
 
         if (result)
         {
+            this.TempData["UserEmail"] = model.Email;
             return this.RedirectToAction("Index", "TodoList");
         }
 

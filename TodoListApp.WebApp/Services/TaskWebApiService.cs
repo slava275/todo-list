@@ -27,7 +27,12 @@ public class TaskWebApiService : ITaskWebApiService
 
         var response = await this.client.PostAsJsonAsync("tasks", model);
 
-        response.EnsureSuccessStatusCode();
+        if (!response.IsSuccessStatusCode)
+        {
+            var errorContent = await response.Content.ReadAsStringAsync();
+
+            throw new HttpRequestException(errorContent);
+        }
     }
 
     public async Task DeleteByIdAsync(int id)
@@ -36,7 +41,12 @@ public class TaskWebApiService : ITaskWebApiService
 
         var response = await this.client.DeleteAsync($"tasks/{id}");
 
-        response.EnsureSuccessStatusCode();
+        if (!response.IsSuccessStatusCode)
+        {
+            var errorContent = await response.Content.ReadAsStringAsync();
+
+            throw new HttpRequestException(errorContent);
+        }
     }
 
     public async Task<IEnumerable<TaskModel>> GetAllByListIdAsync(int listId)
@@ -60,7 +70,12 @@ public class TaskWebApiService : ITaskWebApiService
 
         var response = await this.client.PutAsJsonAsync($"tasks/{model.Id}", model, this.options);
 
-        response.EnsureSuccessStatusCode();
+        if (!response.IsSuccessStatusCode)
+        {
+            var errorContent = await response.Content.ReadAsStringAsync();
+
+            throw new HttpRequestException(errorContent);
+        }
     }
 
     public async Task<IEnumerable<TaskModel>> GetAllByUserIdAsync(Statuses? status = null, string sortBy = "name", bool isAscending = true)

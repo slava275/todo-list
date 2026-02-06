@@ -4,15 +4,21 @@ namespace TodoListApp.Interfaces;
 
 public interface ITodoListDatabaseService
 {
-    Task<IEnumerable<TodoListModel>> GetAllAsync();
+    // US01: Отримати всі списки, до яких користувач має доступ
+    Task<IEnumerable<TodoListModel>> GetAllAsync(string userId);
 
-    Task<TodoListModel?> GetByIdAsync(int id);
+    // US05: Отримати конкретний список за ID (з перевіркою доступу)
+    Task<TodoListModel?> GetByIdAsync(int id, string userId);
 
-    Task CreateAsync(TodoListModel item);
+    // US02: Створити новий список (автоматично призначає творця власником)
+    Task CreateAsync(TodoListModel item, string userId);
 
-    Task DeleteAsync(TodoListModel todoListModel);
+    // US03: Видалити список (тільки для власника)
+    Task DeleteAsync(TodoListModel todoListModel, string userId);
 
-    Task DeleteByIdAsync(int id);
+    // US03: Видалити список за ID (тільки для власника)
+    Task DeleteByIdAsync(int id, string userId);
 
-    Task UpdateAsync(TodoListModel item);
+    // US04: Оновити дані списку (тільки для власника)
+    Task UpdateAsync(TodoListModel item, string userId);
 }

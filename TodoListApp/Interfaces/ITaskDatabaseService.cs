@@ -5,23 +5,33 @@ namespace TodoListApp.Interfaces;
 
 public interface ITaskDatabaseService
 {
-    Task<IEnumerable<TaskModel>> GetByListIdAsync(int todoListId);
+    // US05: Отримати таски конкретного списку (з перевіркою доступу до списку)
+    Task<IEnumerable<TaskModel>> GetByListIdAsync(int todoListId, string userId);
 
-    Task<IEnumerable<TaskModel>> GetAssignedTasksAsync(int userId, Statuses? status, string sortBy, bool ascending);
+    // US11-13: Отримати таски, призначені безпосередньо юзеру
+    Task<IEnumerable<TaskModel>> GetAssignedTasksAsync(string userId, Statuses? status, string sortBy, bool ascending);
 
-    Task ChangeStatusAsync(int id, Statuses status);
+    // US14: Змінити статус (тільки якщо юзер — Assignee)
+    Task ChangeStatusAsync(int id, Statuses status, string userId);
 
-    Task<IEnumerable<TaskModel>> GetAllAsync();
+    // Отримати всі таски з усіх доступних юзеру списків
+    Task<IEnumerable<TaskModel>> GetAllAsync(string userId);
 
-    Task<TaskModel?> GetByIdAsync(int id);
+    // US06: Деталі конкретної таски (з перевіркою доступу до списку)
+    Task<TaskModel?> GetByIdAsync(int id, string userId);
 
-    Task CreateAsync(TaskModel item);
+    // US07: Створити таску (з автоматичним заповненням CreatorId/AssigneeId)
+    Task CreateAsync(TaskModel item, string userId);
 
-    Task DeleteAsync(TaskModel taskModel);
+    // US08: Видалити таску (перевірка прав Owner)
+    Task DeleteAsync(TaskModel taskModel, string userId);
 
-    Task DeleteByIdAsync(int id);
+    // US08: Видалити таску за ID (перевірка прав Owner)
+    Task DeleteByIdAsync(int id, string userId);
 
-    Task UpdateAsync(TaskModel item);
+    // US09: Редагувати таску (перевірка прав Owner/Editor)
+    Task UpdateAsync(TaskModel item, string userId);
 
-    Task<IEnumerable<TaskModel>> SerchTasksAsync(string? title, DateTime? dueDate, DateTime? createdAt);
+    // US15: Пошук по тасках у доступних списках
+    Task<IEnumerable<TaskModel>> SerchTasksAsync(string? title, DateTime? dueDate, DateTime? createdAt, string userId);
 }

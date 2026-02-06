@@ -97,7 +97,7 @@ public class TodoListController : Controller
         }
         catch (HttpRequestException ex)
         {
-            this.TempData["Error"] = $"Не вдалося видалити: {ex.Message}";
+            this.TempData["ErrorMessage"] = $"Не вдалося видалити: {ex.Message}";
             return this.RedirectToAction(nameof(this.Index));
         }
     }

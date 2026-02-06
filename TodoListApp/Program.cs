@@ -64,10 +64,14 @@ builder.Services.AddAuthentication(options =>
             ValidIssuer = builder.Configuration["Jwt:Issuer"],
             ValidAudience = builder.Configuration["Jwt:Audience"],
             IssuerSigningKey = new SymmetricSecurityKey(keyBytes),
+            NameClaimType = "sub", // Вказуємо, що ID користувача лежить у "sub"
+            RoleClaimType = "role", // Якщо у тебе будуть ролі
         };
     });
 
 builder.Services.AddAuthorization();
+
+System.IdentityModel.Tokens.Jwt.JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
 
 var app = builder.Build();
 

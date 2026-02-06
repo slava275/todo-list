@@ -1,5 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using TodoListApp.Exceptions;
+using TodoListApp.Extensions;
 using TodoListApp.Interfaces;
 using TodoListShared.Models.Models;
 
@@ -17,29 +19,27 @@ public class TodoListsController : ControllerBase
         this.service = service;
     }
 
+    private string UserId => this.User.GetUserId();
+
     [HttpGet]
-    public async Task<ActionResult<TodoListModel>> GetAll()
+    public async Task<ActionResult<IEnumerable<TodoListModel>>> GetAll()
     {
-        var todoLists = await this.service.GetAllAsync();
-
-        if (todoLists is null || !todoLists.Any())
-        {
-            return this.NotFound("No todo lists found.");
-        }
-
-        return this.Ok(todoLists);
+        var todoLists = await this.service.GetAllAsync(this.UserId);
+        return this.Ok(todoLists ?? Enumerable.Empty<TodoListModel>());
     }
 
     [HttpGet("{id}")]
     public async Task<ActionResult<TodoListModel>> GetById(int id)
     {
-        var todoList = await this.service.GetByIdAsync(id);
-        if (todoList is null)
+        try
         {
-            return this.NotFound($"Todo list with ID {id} not found.");
+            var todoList = await this.service.GetByIdAsync(id, this.UserId);
+            return this.Ok(todoList);
         }
-
-        return this.Ok(todoList);
+        catch (EntityNotFoundException ex)
+        {
+            return this.NotFound(ex.Message);
+        }
     }
 
     [HttpPost]
@@ -47,10 +47,11 @@ public class TodoListsController : ControllerBase
     {
         if (todoList is null)
         {
-            return this.BadRequest("Todo list cannot be null.");
+            return this.BadRequest();
         }
 
-        await this.service.CreateAsync(todoList);
+        await this.service.CreateAsync(todoList, this.UserId);
+
         return this.CreatedAtAction(nameof(this.GetById), new { id = todoList.Id }, todoList);
     }
 
@@ -59,29 +60,39 @@ public class TodoListsController : ControllerBase
     {
         if (todoList is null || todoList.Id != id)
         {
-            return this.BadRequest("Invalid todo list data.");
+            return this.BadRequest();
         }
 
-        var existingTodoList = await this.service.GetByIdAsync(id);
-        if (existingTodoList is null)
+        try
         {
-            return this.NotFound($"Todo list with ID {id} not found.");
+            await this.service.UpdateAsync(todoList, this.UserId);
+            return this.NoContent();
         }
-
-        await this.service.UpdateAsync(todoList);
-        return this.NoContent();
+        catch (EntityNotFoundException ex)
+        {
+            return this.NotFound(ex.Message);
+        }
+        catch (AccessDeniedException ex)
+        {
+            return this.StatusCode(StatusCodes.Status403Forbidden, ex.Message);
+        }
     }
 
     [HttpDelete("{id}")]
     public async Task<ActionResult> Delete(int id)
     {
-        var existingTodoList = await this.service.GetByIdAsync(id);
-        if (existingTodoList is null)
+        try
         {
-            return this.NotFound($"Todo list with ID {id} not found.");
+            await this.service.DeleteByIdAsync(id, this.UserId);
+            return this.NoContent();
         }
-
-        await this.service.DeleteByIdAsync(id);
-        return this.NoContent();
+        catch (EntityNotFoundException ex)
+        {
+            return this.NotFound(ex.Message);
+        }
+        catch (AccessDeniedException ex)
+        {
+            return this.StatusCode(StatusCodes.Status403Forbidden, ex.Message);
+        }
     }
 }

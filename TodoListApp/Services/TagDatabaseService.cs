@@ -1,8 +1,8 @@
-using System.Globalization;
 using AutoMapper;
 using Microsoft.EntityFrameworkCore;
 using TodoList.Data.Data;
 using TodoList.Data.Entities;
+using TodoListApp.Exceptions;
 using TodoListApp.Interfaces;
 using TodoListShared.Models.Models;
 
@@ -19,18 +19,28 @@ public class TagDatabaseService : ITagDatabaseService
         this.mapper = mapper;
     }
 
-    public async Task AddTagToTaskAsync(int taskId, TagModel model, int userId)
+    public async Task AddTagToTaskAsync(int taskId, TagModel model, string userId)
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(taskId);
-        ArgumentOutOfRangeException.ThrowIfNegative(userId); // or zero
+        ArgumentException.ThrowIfNullOrEmpty(userId);
+
+        var taskExists = await this.context.Tasks.AnyAsync(t => t.Id == taskId);
+        if (!taskExists)
+        {
+            throw new EntityNotFoundException($"Завдання з ID {taskId} не знайдено.");
+        }
 
         var task = await this.context.Tasks
             .Include(t => t.Tags)
-            .FirstOrDefaultAsync(t => t.Id == taskId && t.UserId == userId);
+            .FirstOrDefaultAsync(t => t.Id == taskId &&
+                this.context.TodoListMembers.Any(m =>
+                    m.TodoListId == t.TodoListId &&
+                    m.UserId == userId &&
+                    (m.Role == TodoListRole.Owner || m.Role == TodoListRole.Editor)));
 
         if (task == null)
         {
-            throw new InvalidOperationException($"Task with ID {taskId} not found for user ID {userId}.");
+            throw new AccessDeniedException("У вас немає прав для редагування тегів у цьому завданні.");
         }
 
         var existingTag = await this.context.Tags
@@ -54,50 +64,72 @@ public class TagDatabaseService : ITagDatabaseService
         await this.context.SaveChangesAsync();
     }
 
-    public async Task<IEnumerable<TagModel>> GetAllTagsAsync(int userId)
+    public async Task<IEnumerable<TagModel>> GetAllTagsAsync(string userId)
     {
-        ArgumentOutOfRangeException.ThrowIfNegative(userId);
+        ArgumentException.ThrowIfNullOrEmpty(userId);
 
-        var tags = await this.context.Tags.Where(t => t.Tasks.Any(task => task.UserId == userId)).ToListAsync();
+        var tags = await this.context.Tags
+            .Where(t => t.Tasks.Any(task =>
+                this.context.TodoListMembers.Any(m => m.TodoListId == task.TodoListId && m.UserId == userId)))
+            .ToListAsync();
 
         return this.mapper.Map<IEnumerable<TagModel>>(tags);
     }
 
-    public async Task<IEnumerable<TaskModel>> GetTasksByTagIdAsync(int tagId, int userId)
+    public async Task<IEnumerable<TaskModel>> GetTasksByTagIdAsync(int tagId, string userId)
     {
-        ArgumentOutOfRangeException.ThrowIfNegative(userId);
+        ArgumentException.ThrowIfNullOrEmpty(userId);
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(tagId);
+
+        var tagExists = await this.context.Tags.AnyAsync(t => t.Id == tagId);
+        if (!tagExists)
+        {
+            throw new EntityNotFoundException($"Тег з ID {tagId} не знайдено.");
+        }
 
         var tasks = await this.context.Tasks
             .Include(t => t.Tags)
-            .Where(t => t.UserId == userId && t.Tags.Any(tag => tag.Id == tagId))
+            .Where(t => t.Tags.Any(tag => tag.Id == tagId) &&
+                this.context.TodoListMembers.Any(m => m.TodoListId == t.TodoListId && m.UserId == userId))
             .ToListAsync();
 
         return this.mapper.Map<IEnumerable<TaskModel>>(tasks);
     }
 
-    public async Task RemoveTagFromTaskAsync(int taskId, int tagId, int userId)
+    public async Task RemoveTagFromTaskAsync(int taskId, int tagId, string userId)
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(taskId);
-        ArgumentOutOfRangeException.ThrowIfNegative(userId);
+        ArgumentException.ThrowIfNullOrEmpty(userId);
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(tagId);
 
-        var task = await this.context.Tasks.Include(t => t.Tags).FirstOrDefaultAsync(t => t.Id == taskId && t.UserId == userId);
+        var taskExists = await this.context.Tasks.AnyAsync(t => t.Id == taskId);
+        if (!taskExists)
+        {
+            throw new EntityNotFoundException($"Завдання з ID {taskId} не знайдено.");
+        }
+
+        var task = await this.context.Tasks
+            .Include(t => t.Tags)
+            .FirstOrDefaultAsync(t => t.Id == taskId &&
+                this.context.TodoListMembers.Any(m =>
+                    m.TodoListId == t.TodoListId &&
+                    m.UserId == userId &&
+                    (m.Role == TodoListRole.Owner || m.Role == TodoListRole.Editor)));
 
         if (task == null)
         {
-            throw new InvalidOperationException($"Task with ID {taskId} not found for user ID {userId}.");
+            throw new AccessDeniedException("У вас немає прав для видалення тегів у цьому завданні.");
         }
 
         var tag = task.Tags.FirstOrDefault(t => t.Id == tagId);
-
-        if (tag == null)
+        if (tag != null)
         {
-            throw new InvalidOperationException($"Tag with ID {tagId} not found for user ID {userId}.");
+            task.Tags.Remove(tag);
+            await this.context.SaveChangesAsync();
         }
-
-        task.Tags.Remove(tag);
-
-        await this.context.SaveChangesAsync();
+        else
+        {
+            throw new EntityNotFoundException($"Тег з ID {tagId} не знайдено у цьому завданні.");
+        }
     }
 }

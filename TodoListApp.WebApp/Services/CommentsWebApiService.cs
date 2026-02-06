@@ -29,7 +29,12 @@ public class CommentsWebApiService : ICommentWebApiService
 
         var response = await this.client.PostAsJsonAsync("comments", model, this.options);
 
-        response.EnsureSuccessStatusCode();
+        if (!response.IsSuccessStatusCode)
+        {
+            var errorContent = await response.Content.ReadAsStringAsync();
+
+            throw new HttpRequestException(errorContent);
+        }
     }
 
     public async Task DeleteAsync(int id)
@@ -41,7 +46,12 @@ public class CommentsWebApiService : ICommentWebApiService
 
         var response = await this.client.DeleteAsync($"comments/{id}");
 
-        response.EnsureSuccessStatusCode();
+        if (!response.IsSuccessStatusCode)
+        {
+            var errorContent = await response.Content.ReadAsStringAsync();
+
+            throw new HttpRequestException(errorContent);
+        }
     }
 
     public async Task<IEnumerable<CommentModel>> GetByTaskIdAsync(int taskId)
@@ -65,6 +75,11 @@ public class CommentsWebApiService : ICommentWebApiService
 
         var response = await this.client.PutAsJsonAsync("comments", model, this.options);
 
-        response.EnsureSuccessStatusCode();
+        if (!response.IsSuccessStatusCode)
+        {
+            var errorContent = await response.Content.ReadAsStringAsync();
+
+            throw new HttpRequestException(errorContent);
+        }
     }
 }
