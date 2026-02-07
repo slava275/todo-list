@@ -21,4 +21,10 @@ public interface ITodoListDatabaseService
 
     // US04: Оновити дані списку (тільки для власника)
     Task UpdateAsync(TodoListModel item, string userId);
+
+    Task AddMemberAsync(int todoListId, string newMemberId, string ownerId);
+
+    Task RemoveMemberAsync(int todoListId, string memberId, string ownerId);
+
+    Task UpdateMemberRoleAsync(int todoListId, string memberId, TodoListRole newRole, string ownerId);
 }

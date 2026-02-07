@@ -62,4 +62,30 @@ public class TodoListsController : ControllerBase
         await this.service.DeleteByIdAsync(id, this.UserId);
         return this.NoContent();
     }
+
+    [HttpPost("{id}/members")]
+    public async Task<IActionResult> AddMember(int id, [FromQuery] string userId)
+    {
+        if (string.IsNullOrEmpty(userId))
+        {
+            throw new ArgumentException("ID користувача не може бути порожнім.");
+        }
+
+        await this.service.AddMemberAsync(id, userId, this.UserId);
+        return this.Ok();
+    }
+
+    [HttpDelete("{id}/members/{memberId}")]
+    public async Task<IActionResult> RemoveMember(int id, string memberId)
+    {
+        await this.service.RemoveMemberAsync(id, memberId, this.UserId);
+        return this.NoContent();
+    }
+
+    [HttpPatch("{id}/members/{memberId}/role")]
+    public async Task<IActionResult> UpdateMemberRole(int id, string memberId, [FromQuery] TodoListRole newRole)
+    {
+        await this.service.UpdateMemberRoleAsync(id, memberId, newRole, this.UserId);
+        return this.NoContent();
+    }
 }

@@ -1,3 +1,4 @@
+using System.Net.Http;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using TodoListApp.WebApp.Interfaces;
@@ -63,6 +64,45 @@ public class TodoListWebApiService : ITodoListWebApiService
 
         var response = await this.httpClient.PutAsJsonAsync($"todolists/{model.Id}", model, this.options);
 
+        if (!response.IsSuccessStatusCode)
+        {
+            var errorContent = await response.Content.ReadAsStringAsync();
+
+            throw new HttpRequestException(errorContent);
+        }
+    }
+
+    public async Task AddMemberAsync(int todoListId, string userId)
+    {
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(todoListId);
+
+        var response = await this.httpClient.PostAsync($"todoLists/{todoListId}/members?userId={userId}", null);
+        if (!response.IsSuccessStatusCode)
+        {
+            var errorContent = await response.Content.ReadAsStringAsync();
+
+            throw new HttpRequestException(errorContent);
+        }
+    }
+
+    public async Task RemoveMemberAsync(int todoListId, string memberId)
+    {
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(todoListId);
+
+        var response = await this.httpClient.DeleteAsync($"todoLists/{todoListId}/members/{memberId}");
+        if (!response.IsSuccessStatusCode)
+        {
+            var errorContent = await response.Content.ReadAsStringAsync();
+
+            throw new HttpRequestException(errorContent);
+        }
+    }
+
+    public async Task UpdateMemberRoleAsync(int todoListId, string memberId, TodoListRole newRole)
+    {
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(todoListId);
+
+        var response = await this.httpClient.PatchAsync($"todoLists/{todoListId}/members/{memberId}/role?newRole={newRole}", null);
         if (!response.IsSuccessStatusCode)
         {
             var errorContent = await response.Content.ReadAsStringAsync();

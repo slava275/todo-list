@@ -1,4 +1,3 @@
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using TodoListApp.WebApp.Helpers;
 using TodoListApp.WebApp.Interfaces;
@@ -61,7 +60,7 @@ public class TasksAppController : Controller
         }
         catch (HttpRequestException ex)
         {
-            this.TempData["ErrorMessage"] = $"Не вдалося видалити: {ex.Message}";
+            this.TempData["ErrorMessage"] = $"Не вдалося створити завдання: {ex.Message}";
             return this.View(model);
         }
     }
@@ -117,7 +116,7 @@ public class TasksAppController : Controller
         catch (HttpRequestException ex)
         {
             var newModel = await this.service.GetByIdAsync(model.Id);
-            this.TempData["ErrorMessage"] = $"Не вдалося відредагувати: {ex.Message}";
+            this.TempData["ErrorMessage"] = $"Не вдалося відредагувати завдання: {ex.Message}";
             return this.View(newModel);
         }
     }
@@ -217,7 +216,7 @@ public class TasksAppController : Controller
         }
         catch (HttpRequestException ex)
         {
-            this.TempData["ErrorMessage"] = $"Не вдалося додати: {ex.Message}";
+            this.TempData["ErrorMessage"] = $"Не вдалося додати коментар: {ex.Message}";
             return this.RedirectToAction("Details", new { id = taskId });
         }
     }
@@ -232,7 +231,7 @@ public class TasksAppController : Controller
         }
         catch (HttpRequestException ex)
         {
-            this.TempData["ErrorMessage"] = $"Не вдалося видалити: {ex.Message}";
+            this.TempData["ErrorMessage"] = $"Не вдалося видалити коментар: {ex.Message}";
             return this.RedirectToAction("Details", new { id = taskId });
         }
     }
@@ -256,8 +255,23 @@ public class TasksAppController : Controller
         }
         catch (HttpRequestException ex)
         {
-            this.TempData["ErrorMessage"] = $"Не вдалося змінити: {ex.Message}";
+            this.TempData["ErrorMessage"] = $"Не вдалося оновити коментар: {ex.Message}";
             return this.RedirectToAction("Details", new { id = taskId });
         }
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> Assign(int taskId, string userId, int todolistId)
+    {
+        try
+        {
+            await this.service.AssignTaskAsync(taskId, userId);
+        }
+        catch (HttpRequestException ex)
+        {
+            this.TempData["ErrorMessage"] = "Не вдалося призначити виконавця: " + ex.Message;
+        }
+
+        return this.RedirectToAction("Index", new { todolistId = todolistId });
     }
 }

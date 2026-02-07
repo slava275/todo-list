@@ -116,8 +116,36 @@
                     </tbody>
                 </table>
             </div>
+
+            <div class="card-footer bg-white border-top-0">
+                @await Component.InvokeAsync("TodoListMembers", new { todoListId = todolistId })
+
+                <button type="button" class="btn btn-outline-primary btn-sm mt-3" data-bs-toggle="modal" data-bs-target="#addMemberModal">
+                    <i class="bi bi-person-plus"></i> Додати учасника
+                </button>
+            </div>
         </div>
     }
+</div>
+
+<div class="modal fade" id="addMemberModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Пошук та додавання учасника</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label">Email або ім'я користувача</label>
+                    <input type="text" id="userSearchInput" class="form-control" placeholder="Почніть вводити (мін. 3 символи)..." autocomplete="off">
+                </div>
+
+                <div id="searchResults" class="list-group shadow-sm" style="max-height: 300px; overflow-y: auto;">
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
 <form id="deleteForm" method="post" asp-action="Delete">
@@ -133,5 +161,46 @@
                 document.getElementById('deleteForm').submit();
             }
         }
+
+        const searchInput = document.getElementById('userSearchInput');
+        const resultsContainer = document.getElementById('searchResults');
+        const currentTodoListId = '@todolistId';
+
+        searchInput.addEventListener('input', async (e) => {
+            const query = e.target.value.trim();
+
+            if (query.length < 3) {
+                resultsContainer.innerHTML = '';
+                return;
+            }
+
+            try {
+                const response = await fetch(`/TodoList/GetUsersJson?query=${encodeURIComponent(query)}`);
+                const users = await response.json();
+
+                if (users.length === 0) {
+                    resultsContainer.innerHTML = '<div class="list-group-item text-muted">Нікого не знайдено</div>';
+                    return;
+                }
+
+                resultsContainer.innerHTML = users.map(user => `
+                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="fw-bold">${user.userName}</div>
+                            <small class="text-muted">${user.email}</small>
+                        </div>
+                        <form action="/TodoList/AddMember" method="post" class="m-0">
+                            <input type="hidden" name="todoListId" value="${currentTodoListId}" />
+                            <input type="hidden" name="userId" value="${user.id}" />
+                            <button type="submit" class="btn btn-sm btn-primary">
+                                <i class="bi bi-plus"></i>
+                            </button>
+                        </form>
+                    </div>
+                `).join('');
+            } catch (error) {
+                console.error('Помилка пошуку:', error);
+            }
+        });
     </script>
 }

@@ -16,4 +16,6 @@ public class TodoListEntity
     public string Description { get; set; } = string.Empty;
 
     public ICollection<TaskEntity> Tasks { get; set; } = [];
+
+    public ICollection<TodoListMember> TodoListMembers { get; set; } = [];
 }

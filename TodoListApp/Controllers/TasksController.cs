@@ -96,4 +96,16 @@ public class TasksController : ControllerBase
         var tasks = await this.service.SerchTasksAsync(title, dueDate, createdAt, this.UserId);
         return this.Ok(tasks ?? Enumerable.Empty<TaskModel>());
     }
+
+    [HttpPost("{id}/assign")]
+    public async Task<ActionResult> AssignTask(int id, [FromQuery] string assigneeId)
+    {
+        if (string.IsNullOrWhiteSpace(assigneeId))
+        {
+            throw new ArgumentException("User ID cannot be null or empty.");
+        }
+
+        await this.service.AssignTaskAsync(id, assigneeId, this.UserId);
+        return this.NoContent();
+    }
 }

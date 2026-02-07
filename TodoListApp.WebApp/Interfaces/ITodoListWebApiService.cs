@@ -13,4 +13,10 @@ public interface ITodoListWebApiService
     Task DeleteByIdAsync(int id);
 
     Task<TodoListModel> GetByIdAsync(int id);
+
+    Task AddMemberAsync(int todoListId, string userId);
+
+    Task RemoveMemberAsync(int todoListId, string memberId);
+
+    Task UpdateMemberRoleAsync(int todoListId, string memberId, TodoListRole newRole);
 }

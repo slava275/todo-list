@@ -34,4 +34,6 @@ public interface ITaskDatabaseService
 
     // US15: Пошук по тасках у доступних списках
     Task<IEnumerable<TaskModel>> SerchTasksAsync(string? title, DateTime? dueDate, DateTime? createdAt, string userId);
+
+    Task AssignTaskAsync(int taskId, string newAssigneeId, string ownerId);
 }

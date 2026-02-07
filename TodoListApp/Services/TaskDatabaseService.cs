@@ -229,4 +229,35 @@ public class TaskDatabaseService : ITaskDatabaseService
 
         return this.mapper.Map<IEnumerable<TaskModel>>(await query.ToListAsync());
     }
+
+    public async Task AssignTaskAsync(int taskId, string newAssigneeId, string ownerId)
+    {
+        var task = await this.context.Tasks
+            .Include(t => t.TodoList)
+            .FirstOrDefaultAsync(t => t.Id == taskId);
+
+        if (task == null)
+        {
+            throw new EntityNotFoundException($"Завдання з ID {taskId} не знайдено.");
+        }
+
+        var isOwner = await this.context.TodoListMembers
+            .AnyAsync(m => m.TodoListId == task.TodoListId && m.UserId == ownerId && m.Role == TodoListRole.Owner);
+
+        if (!isOwner)
+        {
+            throw new AccessDeniedException("Тільки власник списку може призначати виконавців.");
+        }
+
+        var isMember = await this.context.TodoListMembers
+            .AnyAsync(m => m.TodoListId == task.TodoListId && m.UserId == newAssigneeId);
+
+        if (!isMember)
+        {
+            throw new AccessDeniedException("Цей користувач не є учасником списку.");
+        }
+
+        task.AssigneeId = newAssigneeId;
+        await this.context.SaveChangesAsync();
+    }
 }

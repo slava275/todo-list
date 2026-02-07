@@ -2,6 +2,7 @@
 
 @{
     ViewData["Title"] = "Редагувати завдання";
+    var todolistId = Model.TodoListId;
 }
 
 <div class="container mt-5">
@@ -11,13 +12,15 @@
                 <div class="card-header bg-primary text-white py-3">
                     <h4 class="mb-0"><i class="bi bi-pencil-square"></i> @ViewData["Title"]</h4>
                 </div>
+
                 @if (TempData["ErrorMessage"] != null)
                 {
-                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <div class="alert alert-danger alert-dismissible fade show m-3" role="alert">
                         @TempData["ErrorMessage"]
                         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                     </div>
                 }
+
                 <div class="card-body p-4">
                     <form asp-action="Edit" method="post">
                         <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
@@ -38,6 +41,27 @@
                         </div>
 
                         <div class="mb-3">
+                            <label class="form-label fw-bold"><i class="bi bi-person-badge"></i> Виконавець</label>
+                            <div class="input-group">
+                                <input type="hidden" asp-for="AssigneeId" id="assigneeIdInput" />
+
+                                <input type="text" id="assigneeNameDisplay" class="form-control bg-light"
+                                       value="@(string.IsNullOrEmpty(Model.AssigneeId) ? "Не призначено" : Model.AssigneeId)" readonly />
+
+                                <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#assignUserModal">
+                                    <i class="bi bi-search"></i> Змінити
+                                </button>
+
+                                @if (!string.IsNullOrEmpty(Model.AssigneeId))
+                                {
+                                    <button type="button" class="btn btn-outline-danger" onclick="clearAssignee()">
+                                        <i class="bi bi-x-lg"></i>
+                                    </button>
+                                }
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
                             <label asp-for="DueDate" class="form-label fw-bold">Дедлайн</label>
                             <input asp-for="DueDate" type="date" class="form-control"
                                    value="@Model.DueDate?.ToString("yyyy-MM-dd")" />
@@ -55,7 +79,6 @@
                         <div class="card bg-light mb-3">
                             <div class="card-body">
                                 <label class="form-label fw-bold"><i class="bi bi-tags"></i> Керування тегами</label>
-
                                 <div class="d-flex flex-wrap gap-2 mb-3">
                                     @if (Model.Tags != null && Model.Tags.Any())
                                     {
@@ -68,15 +91,10 @@
                                             </span>
                                         }
                                     }
-                                    else
-                                    {
-                                        <span class="text-muted small">Тегів ще немає</span>
-                                    }
                                 </div>
 
                                 <div class="input-group input-group-sm">
                                     <input type="text" name="tagName" class="form-control" placeholder="Назва тегу...">
-
                                     <button type="submit" asp-action="AddTag" asp-route-taskId="@Model.Id" class="btn btn-outline-secondary">
                                         <i class="bi bi-plus-circle"></i> Додати
                                     </button>
@@ -98,8 +116,77 @@
     </div>
 </div>
 
+<div class="modal fade" id="assignUserModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Вибір виконавця</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="text" id="userSearchInput" class="form-control mb-3"
+                       placeholder="Введіть email або ім'я (мін. 3 символи)..." autocomplete="off">
+                <div id="searchResults" class="list-group shadow-sm" style="max-height: 300px; overflow-y: auto;">
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 @section Scripts {
     @{
         await Html.RenderPartialAsync("_ValidationScriptsPartial");
     }
+
+    <script>
+        const searchInput = document.getElementById('userSearchInput');
+        const resultsContainer = document.getElementById('searchResults');
+        const assigneeIdInput = document.getElementById('assigneeIdInput');
+        const assigneeNameDisplay = document.getElementById('assigneeNameDisplay');
+
+        searchInput.addEventListener('input', async (e) => {
+            const query = e.target.value.trim();
+            if (query.length < 3) {
+                resultsContainer.innerHTML = '';
+                return;
+            }
+
+            try {
+                const response = await fetch(`/TodoList/GetUsersJson?query=${encodeURIComponent(query)}`);
+                const users = await response.json();
+
+                if (users.length === 0) {
+                    resultsContainer.innerHTML = '<div class="list-group-item text-muted">Користувачів не знайдено</div>';
+                    return;
+                }
+
+                resultsContainer.innerHTML = users.map(user => `
+                    <button type="button" class="list-group-item list-group-item-action"
+                            onclick="selectAssignee('${user.id}', '${user.userName}')">
+                        <div class="fw-bold">${user.userName}</div>
+                        <small class="text-muted">${user.email}</small>
+                    </button>
+                `).join('');
+            } catch (error) {
+                console.error('Помилка пошуку:', error);
+            }
+        });
+
+        function selectAssignee(id, name) {
+            assigneeIdInput.value = id;
+            assigneeNameDisplay.value = name;
+
+            const modalElement = document.getElementById('assignUserModal');
+            const modal = bootstrap.Modal.getInstance(modalElement);
+            modal.hide();
+
+            searchInput.value = '';
+            resultsContainer.innerHTML = '';
+        }
+
+        function clearAssignee() {
+            assigneeIdInput.value = "";
+            assigneeNameDisplay.value = "Не призначено";
+        }
+    </script>
 }

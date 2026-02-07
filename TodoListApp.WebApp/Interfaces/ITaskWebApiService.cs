@@ -18,4 +18,6 @@ public interface ITaskWebApiService
     Task<IEnumerable<TaskModel>> GetAllByUserIdAsync(Statuses? status = null, string sortBy = "name", bool isAscending = true);
 
     Task<IEnumerable<TaskModel>> SearchAsync(string? title, DateTime? dueDate, DateTime? createdAt);
+
+    Task AssignTaskAsync(int taskId, string userId);
 }

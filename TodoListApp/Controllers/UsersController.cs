@@ -1,0 +1,31 @@
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using TodoListApp.Interfaces;
+using TodoListShared.Models.Models;
+
+namespace TodoListApp.Controllers;
+
+[Authorize]
+[ApiController]
+[Route("api/[controller]")]
+public class UsersController : ControllerBase
+{
+    private readonly IUserService userService;
+
+    public UsersController(IUserService userService)
+    {
+        this.userService = userService;
+    }
+
+    [HttpGet("search")]
+    public async Task<ActionResult<IEnumerable<UserLookupModel>>> Search([FromQuery] string query)
+    {
+        if (query != null && query.Length < 3)
+        {
+            throw new ArgumentException("Для пошуку потрібно мінімум 3 символи.");
+        }
+
+        var results = await this.userService.SearchUsersAsync(query);
+        return this.Ok(results);
+    }
+}

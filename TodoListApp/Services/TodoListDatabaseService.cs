@@ -75,13 +75,19 @@ public class TodoListDatabaseService : ITodoListDatabaseService
     public async Task<TodoListModel?> GetByIdAsync(int id, string userId)
     {
         var entity = await this.context.TodoLists
-            .Include(t => t.Tasks)
-            .FirstOrDefaultAsync(x => x.Id == id &&
-                this.context.TodoListMembers.Any(m => m.TodoListId == x.Id && m.UserId == userId));
+            .Include(l => l.TodoListMembers)
+                .ThenInclude(m => m.User)
+            .FirstOrDefaultAsync(l => l.Id == id);
 
         if (entity == null)
         {
-            throw new EntityNotFoundException($"Список справ з ID {id} не знайдено або у вас немає доступу.");
+            throw new EntityNotFoundException($"Список {id} не знайдено.");
+        }
+
+        var isMember = entity.TodoListMembers.Any(m => m.UserId == userId);
+        if (!isMember)
+        {
+            throw new AccessDeniedException("У вас немає доступу до цього списку.");
         }
 
         return this.mapper.Map<TodoListModel>(entity);
@@ -116,5 +122,99 @@ public class TodoListDatabaseService : ITodoListDatabaseService
         ArgumentException.ThrowIfNullOrEmpty(userId);
         ArgumentNullException.ThrowIfNull(todoListModel);
         await this.DeleteByIdAsync(todoListModel.Id, userId);
+    }
+
+    public async Task AddMemberAsync(int todoListId, string newMemberId, string ownerId)
+    {
+        var todoList = await this.context.TodoLists.FindAsync(todoListId);
+        if (todoList == null)
+        {
+            throw new EntityNotFoundException($"Список {todoListId} не знайдено.");
+        }
+
+        var isOwner = await this.context.TodoListMembers
+            .AnyAsync(m => m.TodoListId == todoListId && m.UserId == ownerId && m.Role == TodoListRole.Owner);
+
+        if (!isOwner)
+        {
+            throw new AccessDeniedException("Тільки власник може додавати нових учасників.");
+        }
+
+        var alreadyMember = await this.context.TodoListMembers
+            .AnyAsync(m => m.TodoListId == todoListId && m.UserId == newMemberId);
+
+        if (alreadyMember)
+        {
+            throw new ArgumentException("Цей користувач вже є учасником списку.");
+        }
+
+        var member = new TodoListMember
+        {
+            TodoListId = todoListId,
+            UserId = newMemberId,
+            Role = TodoListRole.Viewer,
+        };
+
+        this.context.TodoListMembers.Add(member);
+        await this.context.SaveChangesAsync();
+    }
+
+    public async Task RemoveMemberAsync(int todoListId, string memberId, string ownerId)
+    {
+        if (memberId == ownerId)
+        {
+            throw new ArgumentException("Ви не можете видалити себе зі свого списку. Видаліть увесь список, якщо він більше не потрібен.");
+        }
+
+        var isOwner = await this.context.TodoListMembers
+            .AnyAsync(m => m.TodoListId == todoListId && m.UserId == ownerId && m.Role == TodoListRole.Owner);
+
+        if (!isOwner)
+        {
+            throw new AccessDeniedException("Тільки власник може видаляти учасників.");
+        }
+
+        var member = await this.context.TodoListMembers
+            .FirstOrDefaultAsync(m => m.TodoListId == todoListId && m.UserId == memberId);
+
+        if (member == null)
+        {
+            throw new EntityNotFoundException("Цей користувач не є учасником списку.");
+        }
+
+        this.context.TodoListMembers.Remove(member);
+
+        var assignedTasks = await this.context.Tasks
+            .Where(t => t.TodoListId == todoListId && t.AssigneeId == memberId)
+            .ToListAsync();
+
+        foreach (var task in assignedTasks)
+        {
+            task.AssigneeId = ownerId;
+        }
+
+        await this.context.SaveChangesAsync();
+    }
+
+    public async Task UpdateMemberRoleAsync(int todoListId, string memberId, TodoListRole newRole, string ownerId)
+    {
+        var isOwner = await this.context.TodoListMembers
+            .AnyAsync(m => m.TodoListId == todoListId && m.UserId == ownerId && m.Role == TodoListRole.Owner);
+
+        if (!isOwner)
+        {
+            throw new AccessDeniedException("Тільки власник може змінювати ролі учасників.");
+        }
+
+        var member = await this.context.TodoListMembers
+            .FirstOrDefaultAsync(m => m.TodoListId == todoListId && m.UserId == memberId);
+
+        if (member == null)
+        {
+            throw new EntityNotFoundException("Користувача не знайдено серед учасників.");
+        }
+
+        member.Role = newRole;
+        await this.context.SaveChangesAsync();
     }
 }

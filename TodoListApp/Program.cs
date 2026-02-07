@@ -58,6 +58,7 @@ builder.Services.AddScoped<ITaskDatabaseService, TaskDatabaseService>();
 builder.Services.AddScoped<ITagDatabaseService, TagDatabaseService>();
 builder.Services.AddScoped<ICommentDatabaseService, CommentDatabaseService>();
 builder.Services.AddScoped<IAccountService, AccountDatabaseService>();
+builder.Services.AddScoped<IUserService, UserService>();
 
 builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
 builder.Services.AddTransient<IEmailService, EmailService>();

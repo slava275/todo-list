@@ -1,3 +1,4 @@
+using System.Net.Http;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using TodoListApp.WebApp.Interfaces;
@@ -126,6 +127,17 @@ public class TaskWebApiService : ITaskWebApiService
         catch (HttpRequestException)
         {
             return Enumerable.Empty<TaskModel>();
+        }
+    }
+
+    public async Task AssignTaskAsync(int taskId, string userId)
+    {
+        var response = await this.client.PostAsync($"tasks/{taskId}/assign?userId={userId}", null);
+
+        if (!response.IsSuccessStatusCode)
+        {
+            var error = await response.Content.ReadAsStringAsync();
+            throw new HttpRequestException(error);
         }
     }
 }

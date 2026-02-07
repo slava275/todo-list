@@ -9,4 +9,6 @@ public class TodoListModel
     public string Description { get; set; } = string.Empty;
 
     public ICollection<TaskModel> Tasks { get; set; } = [];
+
+    public List<TodoListMemberModel> Members { get; set; } = [];
 }

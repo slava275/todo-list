@@ -41,6 +41,7 @@ public static class DataSeeder
                 new TaskEntity
                 {
                     Title = "Завершити Epic 2",
+                    Description = "Пройти курси",
                     Status = Statuses.Completed,
                     IsCompleted = true,
                     CreatedAt = DateTime.UtcNow.AddDays(-5),
@@ -56,6 +57,7 @@ public static class DataSeeder
                 new TaskEntity
                 {
                     Title = "Реалізувати Data Seeder",
+                    Description = "Зробити таску",
                     Status = Statuses.InProgress,
                     CreatedAt = DateTime.UtcNow.AddDays(-1),
                     DueDate = DateTime.UtcNow.AddDays(2),

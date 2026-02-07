@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using TodoListApp.WebApp.Helpers;
 using TodoListApp.WebApp.Interfaces;
+using TodoListApp.WebApp.Services;
 using TodoListShared.Models.Models;
 
 namespace TodoListApp.WebApp.Controllers;
@@ -9,10 +10,12 @@ namespace TodoListApp.WebApp.Controllers;
 public class TodoListController : Controller
 {
     private readonly ITodoListWebApiService service;
+    private readonly IUserWebApiService userService;
 
-    public TodoListController(ITodoListWebApiService service)
+    public TodoListController(ITodoListWebApiService service, IUserWebApiService userService)
     {
         this.service = service;
+        this.userService = userService;
     }
 
     [HttpGet]
@@ -97,8 +100,66 @@ public class TodoListController : Controller
         }
         catch (HttpRequestException ex)
         {
-            this.TempData["ErrorMessage"] = $"Не вдалося видалити: {ex.Message}";
+            this.TempData["ErrorMessage"] = $"Не вдалося видалити список: {ex.Message}";
             return this.RedirectToAction(nameof(this.Index));
+        }
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> AddMember(int todoListId, string userId)
+    {
+        try
+        {
+            await this.service.AddMemberAsync(todoListId, userId);
+        }
+        catch (HttpRequestException ex)
+        {
+            this.TempData["ErrorMessage"] = ex.Message;
+        }
+
+        return this.RedirectToAction("Index", "TasksApp", new { todolistId = todoListId });
+    }
+
+    [HttpPost("RemoveMember")]
+    public async Task<IActionResult> RemoveMember(int todoListId, string memberId)
+    {
+        try
+        {
+            await this.service.RemoveMemberAsync(todoListId, memberId);
+        }
+        catch (HttpRequestException ex)
+        {
+            this.TempData["ErrorMessage"] = ex.Message;
+        }
+
+        return this.RedirectToAction("Index", "TasksApp", new { todolistId = todoListId });
+    }
+
+    [HttpPost("ChangeRole")]
+    public async Task<IActionResult> UpdateRole(int todoListId, string memberId, TodoListRole newRole)
+    {
+        try
+        {
+            await this.service.UpdateMemberRoleAsync(todoListId, memberId, newRole);
+        }
+        catch (HttpRequestException ex)
+        {
+            this.TempData["ErrorMessage"] = ex.Message;
+        }
+
+        return this.RedirectToAction("Index", "TasksApp", new { todolistId = todoListId });
+    }
+
+    public async Task<IActionResult> GetUsersJson(string query)
+    {
+        try
+        {
+            var users = await this.userService.SearchUsersAsync(query);
+            return this.Json(users);
+        }
+        catch (HttpRequestException)
+        {
+            return this.Json(new List<UserLookupModel>());
         }
     }
 }

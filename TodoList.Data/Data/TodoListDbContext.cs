@@ -25,6 +25,7 @@ public class TodoListDbContext : IdentityDbContext<ApplicationUser>
     {
         base.OnModelCreating(builder);
 
+        // Конфігурація статусів завдань
         builder.Entity<TaskEntity>()
             .Property(e => e.Status)
             .HasConversion<string>();
@@ -33,5 +34,27 @@ public class TodoListDbContext : IdentityDbContext<ApplicationUser>
             .HasMany(t => t.Tags)
             .WithMany(t => t.Tasks)
             .UsingEntity(j => j.ToTable("TaskTags"));
+
+        builder.Entity<TodoListMember>(entity =>
+        {
+            entity.ToTable("TodoListMembers");
+
+            entity.HasKey(m => m.Id);
+
+            entity.HasIndex(m => new { m.TodoListId, m.UserId }).IsUnique();
+
+            entity.HasOne(m => m.TodoList)
+                .WithMany(l => l.TodoListMembers)
+                .HasForeignKey(m => m.TodoListId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(m => m.User)
+                .WithMany()
+                .HasForeignKey(m => m.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.Property(m => m.Role)
+                .HasConversion<string>();
+        });
     }
 }

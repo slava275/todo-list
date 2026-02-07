@@ -42,6 +42,12 @@ builder.Services.AddHttpClient<IAuthService, AuthService>(client =>
     client.BaseAddress = new Uri(apiUrl!);
 });
 
+builder.Services.AddHttpClient<IUserWebApiService, UserWebApiService>(client =>
+{
+    client.BaseAddress = new Uri(apiUrl!);
+})
+    .AddHttpMessageHandler<JwtHeaderHandler>();
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.

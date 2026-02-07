@@ -1,0 +1,64 @@
+@model IEnumerable<TodoListMemberModel>
+@{
+    var todolistId = ViewBag.TodoListId;
+}
+
+<div class="mt-5">
+    <h4 class="mb-3 text-secondary"><i class="bi bi-people-fill me-2"></i> Команда проєкту</h4>
+    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-3">
+        @foreach (var member in Model)
+        {
+            <div class="col">
+                <div class="card h-100 border-0 shadow-sm bg-light">
+                    <div class="card-body d-flex align-items-center p-3">
+                        <div class="avatar-circle me-3 bg-white text-primary border fw-bold d-flex align-items-center justify-content-center"
+                             style="width: 45px; height: 45px; border-radius: 50%;">
+                            @member.UserName[0].ToString().ToUpper()
+                        </div>
+                        <div class="flex-grow-1">
+                            <p class="mb-0 fw-bold small">@member.UserName</p>
+                            <span class="badge @(member.Role == TodoListRole.Owner ? "bg-primary" : "bg-info text-dark")"
+                                  style="font-size: 0.7rem;">@member.Role</span>
+                        </div>
+
+                        <div class="dropdown">
+                            <button class="btn btn-link text-muted p-0" data-bs-toggle="dropdown">
+                                <i class="bi bi-three-dots-vertical"></i>
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end p-3" style="min-width: 200px;">
+                                @* Видалення учасника *@
+                                <li>
+                                    <form asp-controller="TodoList" asp-action="RemoveMember" method="post"
+                                          onsubmit="return confirm('Видалити цього учасника?')">
+                                        <input type="hidden" name="todoListId" value="@todolistId" />
+                                        <input type="hidden" name="memberId" value="@member.UserId" />
+                                        <button type="submit" class="dropdown-item text-danger small px-0">
+                                            <i class="bi bi-person-x me-2"></i> Видалити
+                                        </button>
+                                    </form>
+                                </li>
+
+                                @if (member.Role != TodoListRole.Owner)
+                                {
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li>
+                                        <label class="small fw-bold mb-1">Змінити роль:</label>
+                                        <form asp-controller="TodoList" asp-action="UpdateRole" method="post" class="d-flex gap-1">
+                                            <input type="hidden" name="todoListId" value="@todolistId" />
+                                            <input type="hidden" name="memberId" value="@member.UserId" />
+
+                                            <select name="newRole" class="form-select form-select-sm" onchange="this.form.submit()">
+                                                <option value="@TodoListRole.Viewer" selected="@(member.Role == TodoListRole.Viewer)">Viewer</option>
+                                                <option value="@TodoListRole.Editor" selected="@(member.Role == TodoListRole.Editor)">Editor</option>
+                                            </select>
+                                        </form>
+                                    </li>
+                                }
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</div>
