@@ -18,6 +18,5 @@ public class JwtHeaderHandler : DelegatingHandler
         }
 
         return base.SendAsync(request, cancellationToken);
-
     }
 }

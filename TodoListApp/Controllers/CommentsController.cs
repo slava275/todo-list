@@ -1,6 +1,5 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using TodoListApp.Exceptions;
 using TodoListApp.Extensions;
 using TodoListApp.Interfaces;
 using TodoListShared.Models.Models;
@@ -26,11 +25,10 @@ public class CommentsController : ControllerBase
     {
         if (taskid <= 0)
         {
-            return this.BadRequest();
+            throw new ArgumentException("Невалідний ID завдання.");
         }
 
         var comments = await this.service.GetByTaskIdAsync(taskid, this.UserId);
-
         return this.Ok(comments ?? Enumerable.Empty<CommentModel>());
     }
 
@@ -39,26 +37,11 @@ public class CommentsController : ControllerBase
     {
         if (model == null)
         {
-            return this.BadRequest();
+            throw new ArgumentException("Модель коментаря порожня.");
         }
 
-        try
-        {
-            await this.service.AddAsync(model, this.UserId);
-            return this.Ok();
-        }
-        catch (EntityNotFoundException ex)
-        {
-            return this.NotFound(ex.Message);
-        }
-        catch (AccessDeniedException ex)
-        {
-            return this.StatusCode(StatusCodes.Status403Forbidden, ex.Message);
-        }
-        catch (ArgumentNullException ex)
-        {
-            return this.BadRequest(ex.Message);
-        }
+        await this.service.AddAsync(model, this.UserId);
+        return this.Ok();
     }
 
     [HttpPut]
@@ -66,26 +49,11 @@ public class CommentsController : ControllerBase
     {
         if (model == null)
         {
-            return this.BadRequest();
+            throw new ArgumentException("Модель коментаря порожня.");
         }
 
-        try
-        {
-            await this.service.UpdateAsync(model, this.UserId);
-            return this.NoContent();
-        }
-        catch (EntityNotFoundException ex)
-        {
-            return this.NotFound(ex.Message);
-        }
-        catch (AccessDeniedException ex)
-        {
-            return this.StatusCode(StatusCodes.Status403Forbidden, ex.Message);
-        }
-        catch (ArgumentNullException ex)
-        {
-            return this.BadRequest(ex.Message);
-        }
+        await this.service.UpdateAsync(model, this.UserId);
+        return this.NoContent();
     }
 
     [HttpDelete("{id}")]
@@ -93,25 +61,10 @@ public class CommentsController : ControllerBase
     {
         if (id <= 0)
         {
-            return this.BadRequest();
+            throw new ArgumentException("Невалідний ID коментаря.");
         }
 
-        try
-        {
-            await this.service.DeleteAsync(id, this.UserId);
-            return this.NoContent();
-        }
-        catch (EntityNotFoundException ex)
-        {
-            return this.NotFound(ex.Message);
-        }
-        catch (AccessDeniedException ex)
-        {
-            return this.StatusCode(StatusCodes.Status403Forbidden, ex.Message);
-        }
-        catch (ArgumentOutOfRangeException ex)
-        {
-            return this.BadRequest(ex.Message);
-        }
+        await this.service.DeleteAsync(id, this.UserId);
+        return this.NoContent();
     }
 }

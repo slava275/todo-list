@@ -1,6 +1,5 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using TodoListApp.Exceptions;
 using TodoListApp.Extensions;
 using TodoListApp.Interfaces;
 using TodoListShared.Models.Models;
@@ -31,24 +30,14 @@ public class TodoListsController : ControllerBase
     [HttpGet("{id}")]
     public async Task<ActionResult<TodoListModel>> GetById(int id)
     {
-        try
-        {
-            var todoList = await this.service.GetByIdAsync(id, this.UserId);
-            return this.Ok(todoList);
-        }
-        catch (EntityNotFoundException ex)
-        {
-            return this.NotFound(ex.Message);
-        }
+        var todoList = await this.service.GetByIdAsync(id, this.UserId);
+        return this.Ok(todoList);
     }
 
     [HttpPost]
     public async Task<ActionResult> Create([FromBody] TodoListModel todoList)
     {
-        if (todoList is null)
-        {
-            return this.BadRequest();
-        }
+        ArgumentNullException.ThrowIfNull(todoList);
 
         await this.service.CreateAsync(todoList, this.UserId);
 
@@ -60,39 +49,17 @@ public class TodoListsController : ControllerBase
     {
         if (todoList is null || todoList.Id != id)
         {
-            return this.BadRequest();
+            throw new ArgumentException("The ID in the URL does not match the ID in the request body.");
         }
 
-        try
-        {
-            await this.service.UpdateAsync(todoList, this.UserId);
-            return this.NoContent();
-        }
-        catch (EntityNotFoundException ex)
-        {
-            return this.NotFound(ex.Message);
-        }
-        catch (AccessDeniedException ex)
-        {
-            return this.StatusCode(StatusCodes.Status403Forbidden, ex.Message);
-        }
+        await this.service.UpdateAsync(todoList, this.UserId);
+        return this.NoContent();
     }
 
     [HttpDelete("{id}")]
     public async Task<ActionResult> Delete(int id)
     {
-        try
-        {
-            await this.service.DeleteByIdAsync(id, this.UserId);
-            return this.NoContent();
-        }
-        catch (EntityNotFoundException ex)
-        {
-            return this.NotFound(ex.Message);
-        }
-        catch (AccessDeniedException ex)
-        {
-            return this.StatusCode(StatusCodes.Status403Forbidden, ex.Message);
-        }
+        await this.service.DeleteByIdAsync(id, this.UserId);
+        return this.NoContent();
     }
 }

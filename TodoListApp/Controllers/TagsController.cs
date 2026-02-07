@@ -1,6 +1,5 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using TodoListApp.Exceptions;
 using TodoListApp.Extensions;
 using TodoListApp.Interfaces;
 using TodoListShared.Models.Models;
@@ -33,65 +32,24 @@ public class TagsController : ControllerBase
     {
         if (model == null || string.IsNullOrWhiteSpace(model.Name))
         {
-            return this.BadRequest();
+            throw new ArgumentException("Назва тегу не може бути порожньою.");
         }
 
-        try
-        {
-            await this.tagService.AddTagToTaskAsync(taskId, model, this.UserId);
-            return this.Ok();
-        }
-        catch (EntityNotFoundException ex)
-        {
-            return this.NotFound(ex.Message);
-        }
-        catch (AccessDeniedException ex)
-        {
-            return this.StatusCode(StatusCodes.Status403Forbidden, ex.Message);
-        }
-        catch (ArgumentException ex)
-        {
-            return this.BadRequest(ex.Message);
-        }
+        await this.tagService.AddTagToTaskAsync(taskId, model, this.UserId);
+        return this.Ok();
     }
 
     [HttpGet("{tagId}/tasks")]
     public async Task<ActionResult<IEnumerable<TaskModel>>> GetTasksByTag(int tagId)
     {
-        try
-        {
-            var tasks = await this.tagService.GetTasksByTagIdAsync(tagId, this.UserId);
-            return this.Ok(tasks ?? Enumerable.Empty<TaskModel>());
-        }
-        catch (EntityNotFoundException ex)
-        {
-            return this.NotFound(ex.Message);
-        }
-        catch (ArgumentException ex)
-        {
-            return this.BadRequest(ex.Message);
-        }
+        var tasks = await this.tagService.GetTasksByTagIdAsync(tagId, this.UserId);
+        return this.Ok(tasks ?? Enumerable.Empty<TaskModel>());
     }
 
     [HttpDelete("{taskId}/{tagId}")]
     public async Task<IActionResult> RemoveTag(int taskId, int tagId)
     {
-        try
-        {
-            await this.tagService.RemoveTagFromTaskAsync(taskId, tagId, this.UserId);
-            return this.NoContent();
-        }
-        catch (EntityNotFoundException ex)
-        {
-            return this.NotFound(ex.Message);
-        }
-        catch (AccessDeniedException ex)
-        {
-            return this.StatusCode(StatusCodes.Status403Forbidden, ex.Message);
-        }
-        catch (ArgumentException ex)
-        {
-            return this.BadRequest(ex.Message);
-        }
+        await this.tagService.RemoveTagFromTaskAsync(taskId, tagId, this.UserId);
+        return this.NoContent();
     }
 }
