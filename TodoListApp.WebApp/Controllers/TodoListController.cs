@@ -1,7 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using TodoListApp.WebApp.Helpers;
 using TodoListApp.WebApp.Interfaces;
-using TodoListApp.WebApp.Services;
 using TodoListShared.Models.Models;
 
 namespace TodoListApp.WebApp.Controllers;

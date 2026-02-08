@@ -14,7 +14,8 @@ public class AutomapperProfile : Profile
             .ForMember(dest => dest.Email, opt => opt.MapFrom(src => src.User.Email));
 
         this.CreateMap<TodoListEntity, TodoListModel>()
-            .ForMember(dest => dest.Members, opt => opt.MapFrom(src => src.TodoListMembers));
+            .ForMember(dest => dest.Members, opt => opt.MapFrom(src => src.TodoListMembers))
+            .ReverseMap();
 
         // Теги (US17-US21)
         this.CreateMap<TagEntity, TagModel>().ReverseMap();

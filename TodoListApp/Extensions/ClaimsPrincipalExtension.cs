@@ -14,6 +14,6 @@ public static class ClaimsPrincipalExtension
             return userGuidClaim.Value;
         }
 
-        return user.FindFirstValue(ClaimTypes.NameIdentifier)!;
+        return user.FindFirstValue(ClaimTypes.NameIdentifier) !;
     }
 }

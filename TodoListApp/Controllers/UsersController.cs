@@ -20,7 +20,12 @@ public class UsersController : ControllerBase
     [HttpGet("search")]
     public async Task<ActionResult<IEnumerable<UserLookupModel>>> Search([FromQuery] string query)
     {
-        if (query != null && query.Length < 3)
+        if (string.IsNullOrWhiteSpace(query))
+        {
+            throw new ArgumentNullException(query);
+        }
+
+        if (query.Length < 3)
         {
             throw new ArgumentException("Для пошуку потрібно мінімум 3 символи.");
         }

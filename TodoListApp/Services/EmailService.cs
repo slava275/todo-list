@@ -21,7 +21,7 @@ public class EmailService : IEmailService
         var username = this.configuration["EmailSettings:Username"];
         var password = this.configuration["EmailSettings:Password"];
 
-        using var message = new MailMessage(from, toEmail, subject, body);
+        using var message = new MailMessage(from!, toEmail, subject, body);
 
         message.IsBodyHtml = true;
 

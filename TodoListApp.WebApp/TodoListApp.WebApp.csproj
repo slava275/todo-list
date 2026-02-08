@@ -1,10 +1,10 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
-    <TargetFramework>net10.0</TargetFramework>
+    <TargetFramework>net8.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
-    <NoWarn>SA1200,IDE0058</NoWarn>
+    <NoWarn>SA1200,IDE0058,S6853,S1192,S4144,S3993,CS8619</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>
