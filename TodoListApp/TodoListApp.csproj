@@ -7,7 +7,7 @@
     <EnableNETAnalyzers>true</EnableNETAnalyzers>
     <AnalysisMode>AllEnabledByDefault</AnalysisMode>
     <AnalysisLevel>latest</AnalysisLevel>
-    <NoWarn>SA1200,IDE0058,CA1515,CA1031,CA1848,CA1308,CA1311,CA1304,CA1305,CA1862,CS8603,CA1062</NoWarn>
+    <NoWarn>SA1200,IDE0058,CA1515,CA1031,CA1848,CA1308,CA1311,CA1304,CA1305,CA1862,CS8603,CA1062,S4457,SA1011</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>
