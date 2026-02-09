@@ -1,50 +1,51 @@
 using AutoMapper;
 using Microsoft.EntityFrameworkCore;
-using TodoList.Data.Data;
 using TodoList.Data.Entities;
 using TodoListApp.Exceptions;
 using TodoListApp.Interfaces;
+using TodoListApp.Interfaces.Repositories;
+using TodoListApp.Validation;
 using TodoListShared.Models.Models;
 
 namespace TodoListApp.Services;
 
 public class TagDatabaseService : ITagDatabaseService
 {
-    private readonly TodoListDbContext context;
+    private readonly ITagRepository tagRepository;
+    private readonly ITaskRepository taskRepository;
+    private readonly ITodoListRepository listRepository;
     private readonly IMapper mapper;
 
-    public TagDatabaseService(TodoListDbContext context, IMapper mapper)
+    public TagDatabaseService(
+        ITagRepository tagRepository,
+        ITaskRepository taskRepository,
+        ITodoListRepository listRepository,
+        IMapper mapper)
     {
-        this.context = context;
+        this.tagRepository = tagRepository;
+        this.taskRepository = taskRepository;
+        this.listRepository = listRepository;
         this.mapper = mapper;
     }
 
     public async Task AddTagToTaskAsync(int taskId, TagModel model, string userId)
     {
-        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(taskId);
-        ArgumentException.ThrowIfNullOrEmpty(userId);
+        ServiceValidator.EnsureValidId(taskId);
+        ServiceValidator.EnsureNotNull(model);
 
-        var taskExists = await this.context.Tasks.AnyAsync(t => t.Id == taskId);
-        if (!taskExists)
+        var task = await this.taskRepository.GetWithDetailsAsync(taskId);
+        if (task == null)
         {
             throw new EntityNotFoundException($"Завдання з ID {taskId} не знайдено.");
         }
 
-        var task = await this.context.Tasks
-            .Include(t => t.Tags)
-            .FirstOrDefaultAsync(t => t.Id == taskId &&
-                this.context.TodoListMembers.Any(m =>
-                    m.TodoListId == t.TodoListId &&
-                    m.UserId == userId &&
-                    (m.Role == TodoListRole.Owner || m.Role == TodoListRole.Editor)));
-
-        if (task == null)
+        var member = await this.listRepository.GetMemberAsync(task.TodoListId, userId);
+        if (member == null || (member.Role != TodoListRole.Owner && member.Role != TodoListRole.Editor))
         {
             throw new AccessDeniedException("У вас немає прав для редагування тегів у цьому завданні.");
         }
 
-        var existingTag = await this.context.Tags
-            .FirstOrDefaultAsync(t => t.Name.ToLower() == model.Name.ToLower());
+        var existingTag = await this.tagRepository.GetByNameAsync(model.Name);
 
         if (existingTag != null)
         {
@@ -61,62 +62,38 @@ public class TagDatabaseService : ITagDatabaseService
             task.Tags.Add(tagEntity);
         }
 
-        await this.context.SaveChangesAsync();
+        await this.taskRepository.SaveChangesAsync();
     }
 
     public async Task<IEnumerable<TagModel>> GetAllTagsAsync(string userId)
     {
         ArgumentException.ThrowIfNullOrEmpty(userId);
 
-        var tags = await this.context.Tags
-            .Where(t => t.Tasks.Any(task =>
-                this.context.TodoListMembers.Any(m => m.TodoListId == task.TodoListId && m.UserId == userId)))
-            .ToListAsync();
-
+        var tags = await this.tagRepository.GetAllForUserAsync(userId);
         return this.mapper.Map<IEnumerable<TagModel>>(tags);
     }
 
     public async Task<IEnumerable<TaskModel>> GetTasksByTagIdAsync(int tagId, string userId)
     {
-        ArgumentException.ThrowIfNullOrEmpty(userId);
-        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(tagId);
+        await ServiceValidator.EnsureExistsAsync(tagId, this.tagRepository.ExistsAsync, "Тег");
 
-        var tagExists = await this.context.Tags.AnyAsync(t => t.Id == tagId);
-        if (!tagExists)
-        {
-            throw new EntityNotFoundException($"Тег з ID {tagId} не знайдено.");
-        }
+        var query = this.taskRepository.SearchTasksQuery(userId)
+            .Where(t => t.Tags.Any(tag => tag.Id == tagId));
 
-        var tasks = await this.context.Tasks
-            .Include(t => t.Tags)
-            .Where(t => t.Tags.Any(tag => tag.Id == tagId) &&
-                this.context.TodoListMembers.Any(m => m.TodoListId == t.TodoListId && m.UserId == userId))
-            .ToListAsync();
-
+        var tasks = await query.ToListAsync();
         return this.mapper.Map<IEnumerable<TaskModel>>(tasks);
     }
 
     public async Task RemoveTagFromTaskAsync(int taskId, int tagId, string userId)
     {
-        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(taskId);
-        ArgumentException.ThrowIfNullOrEmpty(userId);
-        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(tagId);
+        ServiceValidator.EnsureValidId(taskId);
+        ServiceValidator.EnsureValidId(tagId);
 
-        var taskExists = await this.context.Tasks.AnyAsync(t => t.Id == taskId);
-        if (!taskExists)
-        {
-            throw new EntityNotFoundException($"Завдання з ID {taskId} не знайдено.");
-        }
+        var task = await this.taskRepository.GetWithDetailsAsync(taskId);
+        ServiceValidator.EnsureNotNull(task);
 
-        var task = await this.context.Tasks
-            .Include(t => t.Tags)
-            .FirstOrDefaultAsync(t => t.Id == taskId &&
-                this.context.TodoListMembers.Any(m =>
-                    m.TodoListId == t.TodoListId &&
-                    m.UserId == userId &&
-                    (m.Role == TodoListRole.Owner || m.Role == TodoListRole.Editor)));
-
-        if (task == null)
+        var member = await this.listRepository.GetMemberAsync(task!.TodoListId, userId);
+        if (member == null || (member.Role != TodoListRole.Owner && member.Role != TodoListRole.Editor))
         {
             throw new AccessDeniedException("У вас немає прав для видалення тегів у цьому завданні.");
         }
@@ -125,7 +102,7 @@ public class TagDatabaseService : ITagDatabaseService
         if (tag != null)
         {
             task.Tags.Remove(tag);
-            await this.context.SaveChangesAsync();
+            await this.taskRepository.SaveChangesAsync();
         }
         else
         {

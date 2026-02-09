@@ -1,42 +1,44 @@
 using AutoMapper;
-using Microsoft.EntityFrameworkCore;
-using TodoList.Data.Data;
 using TodoList.Data.Entities;
 using TodoListApp.Exceptions;
 using TodoListApp.Interfaces;
+using TodoListApp.Interfaces.Repositories;
+using TodoListApp.Validation;
 using TodoListShared.Models.Models;
 
 namespace TodoListApp.Services;
 
 public class CommentDatabaseService : ICommentDatabaseService
 {
-    private readonly TodoListDbContext context;
+    private readonly ICommentRepository commentRepository;
+    private readonly ITaskRepository taskRepository;
+    private readonly ITodoListRepository listRepository;
     private readonly IMapper mapper;
 
-    public CommentDatabaseService(TodoListDbContext context, IMapper mapper)
+    public CommentDatabaseService(
+        ICommentRepository commentRepository,
+        ITaskRepository taskRepository,
+        ITodoListRepository listRepository,
+        IMapper mapper)
     {
-        this.context = context;
+        this.commentRepository = commentRepository;
+        this.taskRepository = taskRepository;
+        this.listRepository = listRepository;
         this.mapper = mapper;
     }
 
     public async Task AddAsync(CommentModel model, string userId)
     {
-        ArgumentNullException.ThrowIfNull(model);
+        ServiceValidator.EnsureNotNull(model);
 
-        var task = await this.context.Tasks.AnyAsync(t => t.Id == model.TaskId);
-        if (!task)
+        var task = await this.taskRepository.GetByIdAsync(model.TaskId);
+        if (task == null)
         {
             throw new EntityNotFoundException($"Завдання з ID {model.TaskId} не знайдено.");
         }
 
-        var canComment = await this.context.Tasks
-            .AnyAsync(t => t.Id == model.TaskId &&
-                this.context.TodoListMembers.Any(m =>
-                    m.TodoListId == t.TodoListId &&
-                    m.UserId == userId &&
-                    (m.Role == TodoListRole.Owner || m.Role == TodoListRole.Editor)));
-
-        if (!canComment)
+        var member = await this.listRepository.GetMemberAsync(task.TodoListId, userId);
+        if (member == null || (member.Role != TodoListRole.Owner && member.Role != TodoListRole.Editor))
         {
             throw new AccessDeniedException("Ви не маєте прав для додавання коментарів до цього завдання.");
         }
@@ -45,82 +47,46 @@ public class CommentDatabaseService : ICommentDatabaseService
         entity.UserId = userId;
         entity.CreatedAt = DateTime.UtcNow;
 
-        this.context.Comments.Add(entity);
-        await this.context.SaveChangesAsync();
+        await this.commentRepository.AddAsync(entity);
+        await this.commentRepository.SaveChangesAsync();
     }
 
     public async Task DeleteAsync(int id, string userId)
     {
-        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(id);
+        await ServiceValidator.EnsureExistsAsync(id, this.commentRepository.ExistsAsync, "Коментар");
 
-        var comment = await this.context.Comments
-            .Include(c => c.Task)
-            .FirstOrDefaultAsync(c => c.Id == id);
+        var comment = await this.commentRepository.GetWithTaskAsync(id);
 
-        if (comment == null)
-        {
-            throw new EntityNotFoundException($"Коментар з ID {id} не знайдено.");
-        }
+        await ServiceValidator.EnsureOwnerAsync(comment!.Task.TodoListId, userId, this.listRepository.IsOwnerAsync);
 
-        var isOwner = await this.context.TodoListMembers
-            .AnyAsync(m => m.TodoListId == comment.Task.TodoListId &&
-                           m.UserId == userId &&
-                           m.Role == TodoListRole.Owner);
-
-        if (!isOwner)
-        {
-            throw new AccessDeniedException("Тільки власник списку може видаляти коментарі.");
-        }
-
-        this.context.Comments.Remove(comment);
-        await this.context.SaveChangesAsync();
+        await this.commentRepository.RemoveAsync(comment);
+        await this.commentRepository.SaveChangesAsync();
     }
 
     public async Task<IEnumerable<CommentModel>> GetByTaskIdAsync(int taskId, string userId)
     {
-        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(taskId);
+        ServiceValidator.EnsureValidId(taskId);
 
-        var hasAccess = await this.context.Tasks
-            .AnyAsync(t => t.Id == taskId &&
-                this.context.TodoListMembers.Any(m => m.TodoListId == t.TodoListId && m.UserId == userId));
-
-        if (!hasAccess)
+        var task = await this.taskRepository.GetByIdAsync(taskId);
+        if (task == null || !await this.listRepository.IsMemberAsync(task.TodoListId, userId))
         {
             return Enumerable.Empty<CommentModel>();
         }
 
-        var entities = await this.context.Comments
-            .Where(c => c.TaskId == taskId)
-            .OrderByDescending(c => c.CreatedAt)
-            .ToListAsync();
-
+        var entities = await this.commentRepository.GetByTaskIdAsync(taskId);
         return this.mapper.Map<IEnumerable<CommentModel>>(entities);
     }
 
     public async Task UpdateAsync(CommentModel model, string userId)
     {
-        ArgumentNullException.ThrowIfNull(model);
+        ServiceValidator.EnsureNotNull(model);
+        await ServiceValidator.EnsureExistsAsync(model.Id, this.commentRepository.ExistsAsync, "Коментар");
 
-        var entity = await this.context.Comments
-            .Include(c => c.Task)
-            .FirstOrDefaultAsync(c => c.Id == model.Id);
+        var entity = await this.commentRepository.GetWithTaskAsync(model.Id);
 
-        if (entity == null)
-        {
-            throw new EntityNotFoundException($"Коментар з ID {model.Id} не знайдено.");
-        }
-
-        var isOwner = await this.context.TodoListMembers
-            .AnyAsync(m => m.TodoListId == entity.Task.TodoListId &&
-                           m.UserId == userId &&
-                           m.Role == TodoListRole.Owner);
-
-        if (!isOwner)
-        {
-            throw new AccessDeniedException("Тільки власник списку може редагувати коментарі.");
-        }
+        await ServiceValidator.EnsureOwnerAsync(entity!.Task.TodoListId, userId, this.listRepository.IsOwnerAsync);
 
         entity.Text = model.Text;
-        await this.context.SaveChangesAsync();
+        await this.commentRepository.SaveChangesAsync();
     }
 }

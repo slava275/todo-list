@@ -9,7 +9,9 @@ using TodoList.Data.Data;
 using TodoList.Data.Entities;
 using TodoListApp.Exceptions.Middleware;
 using TodoListApp.Interfaces;
+using TodoListApp.Interfaces.Repositories;
 using TodoListApp.Mappings;
+using TodoListApp.Repositories;
 using TodoListApp.Services;
 using TodoListShared.Models.Models;
 
@@ -59,6 +61,11 @@ builder.Services.AddScoped<ITagDatabaseService, TagDatabaseService>();
 builder.Services.AddScoped<ICommentDatabaseService, CommentDatabaseService>();
 builder.Services.AddScoped<IAccountService, AccountDatabaseService>();
 builder.Services.AddScoped<IUserService, UserService>();
+
+builder.Services.AddScoped<ITodoListRepository, TodoListRepository>();
+builder.Services.AddScoped<ITaskRepository, TaskRepository>();
+builder.Services.AddScoped<ITagRepository, TagRepository>();
+builder.Services.AddScoped<ICommentRepository, CommentRepository>();
 
 builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
 builder.Services.AddTransient<IEmailService, EmailService>();

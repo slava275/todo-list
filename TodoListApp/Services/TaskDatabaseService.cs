@@ -1,10 +1,11 @@
 using System.Globalization;
 using AutoMapper;
 using Microsoft.EntityFrameworkCore;
-using TodoList.Data.Data;
 using TodoList.Data.Entities;
 using TodoListApp.Exceptions;
 using TodoListApp.Interfaces;
+using TodoListApp.Interfaces.Repositories;
+using TodoListApp.Validation;
 using TodoListShared.Models;
 using TodoListShared.Models.Models;
 
@@ -12,49 +13,36 @@ namespace TodoListApp.Services;
 
 public class TaskDatabaseService : ITaskDatabaseService
 {
-    private readonly TodoListDbContext context;
+    private const string EntityName = "Завдання";
+    private readonly ITaskRepository taskRepository;
+    private readonly ITodoListRepository listRepository;
     private readonly IMapper mapper;
 
-    public TaskDatabaseService(TodoListDbContext context, IMapper mapper)
+    public TaskDatabaseService(ITaskRepository taskRepository, ITodoListRepository listRepository, IMapper mapper)
     {
-        this.context = context;
+        this.taskRepository = taskRepository;
+        this.listRepository = listRepository;
         this.mapper = mapper;
     }
 
     public async Task<IEnumerable<TaskModel>> GetByListIdAsync(int todoListId, string userId)
     {
-        var hasAccess = await this.context.TodoListMembers
-            .AnyAsync(m => m.TodoListId == todoListId && m.UserId == userId);
+        ServiceValidator.EnsureValidId(todoListId);
 
-        if (!hasAccess)
+        if (!await this.listRepository.IsMemberAsync(todoListId, userId))
         {
             return Enumerable.Empty<TaskModel>();
         }
 
-        var entities = await this.context.Tasks
-            .Include(t => t.Tags)
-            .Include(t => t.Comments)
-            .Where(t => t.TodoListId == todoListId)
-            .ToListAsync();
-
+        var entities = await this.taskRepository.GetByListIdAsync(todoListId);
         return this.mapper.Map<IEnumerable<TaskModel>>(entities);
     }
 
     public async Task CreateAsync(TaskModel item, string userId)
     {
-        ArgumentNullException.ThrowIfNull(item);
+        ServiceValidator.EnsureNotNull(item);
 
-        var listExists = await this.context.TodoLists.AnyAsync(l => l.Id == item.TodoListId);
-        if (!listExists)
-        {
-            throw new EntityNotFoundException($"Список з ID {item.TodoListId} не знайдено.");
-        }
-
-        var canCreate = await this.context.TodoListMembers
-            .AnyAsync(m => m.TodoListId == item.TodoListId && m.UserId == userId &&
-                           (m.Role == TodoListRole.Owner || m.Role == TodoListRole.Editor));
-
-        if (!canCreate)
+        if (!await this.listRepository.IsMemberAsync(item.TodoListId, userId))
         {
             throw new AccessDeniedException("У вас немає прав для додавання завдань до цього списку.");
         }
@@ -68,97 +56,56 @@ public class TaskDatabaseService : ITaskDatabaseService
             entity.CreatedAt = DateTime.UtcNow;
         }
 
-        this.context.Tasks.Add(entity);
-        await this.context.SaveChangesAsync();
+        await this.taskRepository.AddAsync(entity);
+        await this.taskRepository.SaveChangesAsync();
     }
 
     public async Task DeleteByIdAsync(int id, string userId)
     {
-        var taskExists = await this.context.Tasks.AnyAsync(t => t.Id == id);
-        if (!taskExists)
-        {
-            throw new EntityNotFoundException($"Завдання з ID {id} не знайдено.");
-        }
+        await ServiceValidator.EnsureExistsAsync(id, this.taskRepository.ExistsAsync, EntityName);
 
-        var entity = await this.context.Tasks
-            .FirstOrDefaultAsync(t => t.Id == id &&
-                this.context.TodoListMembers.Any(m => m.TodoListId == t.TodoListId && m.UserId == userId && m.Role == TodoListRole.Owner));
+        var entity = await this.taskRepository.GetByIdAsync(id);
 
-        if (entity == null)
-        {
-            throw new AccessDeniedException("Тільки власник списку може видаляти завдання.");
-        }
+        await ServiceValidator.EnsureOwnerAsync(entity!.TodoListId, userId, this.listRepository.IsOwnerAsync);
 
-        this.context.Tasks.Remove(entity);
-        await this.context.SaveChangesAsync();
-    }
-
-    public async Task DeleteAsync(TaskModel taskModel, string userId)
-    {
-        ArgumentNullException.ThrowIfNull(taskModel);
-        await this.DeleteByIdAsync(taskModel.Id, userId);
-    }
-
-    public async Task<IEnumerable<TaskModel>> GetAllAsync(string userId)
-    {
-        var entities = await this.context.Tasks
-            .Include(t => t.Tags)
-            .Include(t => t.Comments)
-            .Where(t => this.context.TodoListMembers.Any(m => m.TodoListId == t.TodoListId && m.UserId == userId))
-            .ToListAsync();
-
-        return this.mapper.Map<IEnumerable<TaskModel>>(entities);
+        await this.taskRepository.RemoveAsync(entity);
+        await this.taskRepository.SaveChangesAsync();
     }
 
     public async Task<TaskModel?> GetByIdAsync(int id, string userId)
     {
-        var entity = await this.context.Tasks
-            .Include(t => t.Tags)
-            .Include(t => t.Comments)
-            .FirstOrDefaultAsync(t => t.Id == id &&
-                this.context.TodoListMembers.Any(m => m.TodoListId == t.TodoListId && m.UserId == userId));
+        await ServiceValidator.EnsureExistsAsync(id, this.taskRepository.ExistsAsync, EntityName);
 
-        if (entity == null)
+        var entity = await this.taskRepository.GetWithDetailsAsync(id);
+
+        if (!await this.listRepository.IsMemberAsync(entity!.TodoListId, userId))
         {
-            var exists = await this.context.Tasks.AnyAsync(t => t.Id == id);
-            if (!exists)
-            {
-                throw new EntityNotFoundException($"Завдання з ID {id} не знайдено.");
-            }
-
             throw new AccessDeniedException("У вас немає доступу до деталей цього завдання.");
         }
 
-        return this.mapper.Map<TaskModel?>(entity);
+        return this.mapper.Map<TaskModel>(entity);
     }
 
     public async Task UpdateAsync(TaskModel item, string userId)
     {
-        ArgumentNullException.ThrowIfNull(item);
+        ServiceValidator.EnsureNotNull(item);
+        await ServiceValidator.EnsureExistsAsync(item.Id, this.taskRepository.ExistsAsync, EntityName);
 
-        var exists = await this.context.Tasks.AnyAsync(t => t.Id == item.Id);
-        if (!exists)
-        {
-            throw new EntityNotFoundException($"Завдання з ID {item.Id} не знайдено.");
-        }
+        var existingEntity = await this.taskRepository.GetByIdAsync(item.Id);
 
-        var existingEntity = await this.context.Tasks
-            .FirstOrDefaultAsync(t => t.Id == item.Id &&
-                this.context.TodoListMembers.Any(m => m.TodoListId == t.TodoListId && m.UserId == userId &&
-                                               (m.Role == TodoListRole.Owner || m.Role == TodoListRole.Editor)));
-
-        if (existingEntity == null)
+        var member = await this.listRepository.GetMemberAsync(existingEntity!.TodoListId, userId);
+        if (member == null || (member.Role != TodoListRole.Owner && member.Role != TodoListRole.Editor))
         {
             throw new AccessDeniedException("У вас немає прав для редагування цього завдання.");
         }
 
         this.mapper.Map(item, existingEntity);
-        await this.context.SaveChangesAsync();
+        await this.taskRepository.SaveChangesAsync();
     }
 
     public async Task<IEnumerable<TaskModel>> GetAssignedTasksAsync(string userId, Statuses? status, string sortBy, bool ascending)
     {
-        var query = this.context.Tasks.Where(t => t.AssigneeId == userId);
+        var query = this.taskRepository.GetAssignedTasksQuery(userId);
 
         if (status.HasValue)
         {
@@ -176,7 +123,8 @@ public class TaskDatabaseService : ITaskDatabaseService
             _ => query.OrderBy(t => t.CreatedAt)
         };
 
-        return this.mapper.Map<IEnumerable<TaskModel>>(await query.ToListAsync());
+        var entities = await query.ToListAsync();
+        return this.mapper.Map<IEnumerable<TaskModel>>(entities);
     }
 
     public async Task ChangeStatusAsync(int id, Statuses status, string userId)
@@ -186,31 +134,22 @@ public class TaskDatabaseService : ITaskDatabaseService
             throw new ArgumentException("Невалідний статус.");
         }
 
-        var taskExists = await this.context.Tasks.AnyAsync(t => t.Id == id);
-        if (!taskExists)
-        {
-            throw new EntityNotFoundException($"Завдання з ID {id} не знайдено.");
-        }
+        await ServiceValidator.EnsureExistsAsync(id, this.taskRepository.ExistsAsync, EntityName);
 
-        var entity = await this.context.Tasks
-            .FirstOrDefaultAsync(t => t.Id == id && t.AssigneeId == userId);
+        var entity = await this.taskRepository.GetByIdAsync(id);
 
-        if (entity == null)
+        if (entity!.AssigneeId != userId)
         {
-            throw new AccessDeniedException("Змінити статус може тільки виконавець, на якого призначене завдання.");
+            throw new AccessDeniedException("Змінити статус може тільки виконавець.");
         }
 
         entity.Status = status;
-        await this.context.SaveChangesAsync();
+        await this.taskRepository.SaveChangesAsync();
     }
 
     public async Task<IEnumerable<TaskModel>> SerchTasksAsync(string? title, DateTime? dueDate, DateTime? createdAt, string userId)
     {
-        var query = this.context.Tasks
-            .Include(t => t.Tags)
-            .Include(t => t.Comments)
-            .Where(t => this.context.TodoListMembers.Any(m => m.TodoListId == t.TodoListId && m.UserId == userId))
-            .AsQueryable();
+        var query = this.taskRepository.SearchTasksQuery(userId);
 
         if (!string.IsNullOrWhiteSpace(title))
         {
@@ -227,37 +166,36 @@ public class TaskDatabaseService : ITaskDatabaseService
             query = query.Where(t => t.CreatedAt.Date == createdAt.Value.Date);
         }
 
-        return this.mapper.Map<IEnumerable<TaskModel>>(await query.ToListAsync());
+        var entities = await query.ToListAsync();
+        return this.mapper.Map<IEnumerable<TaskModel>>(entities);
     }
 
     public async Task AssignTaskAsync(int taskId, string newAssigneeId, string ownerId)
     {
-        var task = await this.context.Tasks
-            .Include(t => t.TodoList)
-            .FirstOrDefaultAsync(t => t.Id == taskId);
+        await ServiceValidator.EnsureExistsAsync(taskId, this.taskRepository.ExistsAsync, EntityName);
 
-        if (task == null)
-        {
-            throw new EntityNotFoundException($"Завдання з ID {taskId} не знайдено.");
-        }
+        var task = await this.taskRepository.GetByIdAsync(taskId);
 
-        var isOwner = await this.context.TodoListMembers
-            .AnyAsync(m => m.TodoListId == task.TodoListId && m.UserId == ownerId && m.Role == TodoListRole.Owner);
+        await ServiceValidator.EnsureOwnerAsync(task!.TodoListId, ownerId, this.listRepository.IsOwnerAsync);
 
-        if (!isOwner)
-        {
-            throw new AccessDeniedException("Тільки власник списку може призначати виконавців.");
-        }
-
-        var isMember = await this.context.TodoListMembers
-            .AnyAsync(m => m.TodoListId == task.TodoListId && m.UserId == newAssigneeId);
-
-        if (!isMember)
+        if (!await this.listRepository.IsMemberAsync(task.TodoListId, newAssigneeId))
         {
             throw new AccessDeniedException("Цей користувач не є учасником списку.");
         }
 
         task.AssigneeId = newAssigneeId;
-        await this.context.SaveChangesAsync();
+        await this.taskRepository.SaveChangesAsync();
+    }
+
+    public async Task DeleteAsync(TaskModel taskModel, string userId)
+    {
+        ServiceValidator.EnsureNotNull(taskModel);
+        await this.DeleteByIdAsync(taskModel.Id, userId);
+    }
+
+    public async Task<IEnumerable<TaskModel>> GetAllAsync(string userId)
+    {
+        var entities = await this.taskRepository.GetAllForUserAsync(userId);
+        return this.mapper.Map<IEnumerable<TaskModel>>(entities);
     }
 }
