@@ -16,20 +16,20 @@
                     <div asp-validation-summary="ModelOnly" class="text-danger"></div>
 
                     <div class="mb-3">
-                        <label asp-for="Email" class="form-label">Електронна пошта</label>
-                        <input asp-for="Email" class="form-control" placeholder="name@example.com" />
+                        <label asp-for="Email" for="Email" class="form-label">Електронна пошта</label>
+                        <input asp-for="Email" id="Email" class="form-control" placeholder="name@example.com" />
                         <span asp-validation-for="Email" class="text-danger"></span>
                     </div>
 
                     <div class="mb-3">
-                        <label asp-for="Password" class="form-label">Пароль</label>
-                        <input asp-for="Password" type="password" class="form-control" />
+                        <label asp-for="Password" for="Password" class="form-label">Пароль</label>
+                        <input asp-for="Password" id="Password" type="password" class="form-control" />
                         <span asp-validation-for="Password" class="text-danger"></span>
                     </div>
 
                     <div class="mb-3">
-                        <label asp-for="ConfirmPassword" class="form-label">Підтвердження пароля</label>
-                        <input asp-for="ConfirmPassword" type="password" class="form-control" />
+                        <label asp-for="ConfirmPassword" for="ConfirmPassword" class="form-label">Підтвердження пароля</label>
+                        <input asp-for="ConfirmPassword" id="ConfirmPassword" type="password" class="form-control" />
                         <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
                     </div>
 

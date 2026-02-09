@@ -25,9 +25,9 @@
             <form asp-action="Assigned" method="get" class="row g-3 align-items-end">
 
                 <div class="col-md-4">
-                    <label class="form-label fw-bold">Статус (US12):</label>
+                    <span class="form-label fw-bold">Статус:</span>
                     <select name="statusFilter" class="form-select" onchange="this.form.submit()">
-                        <option value="">Всі завдання (US11)</option>
+                        <option value="">Всі завдання</option>
                         @foreach (var status in Enum.GetValues(typeof(Statuses)))
                         {
                             <option value="@status" selected="@(currentStatus != null && currentStatus == (Statuses)status)">
@@ -38,7 +38,7 @@
                 </div>
 
                 <div class="col-md-3">
-                    <label class="form-label fw-bold">Сортувати за (US13):</label>
+                    <span class="form-label fw-bold">Сортувати за:</span>
                     <select name="sortBy" class="form-select" onchange="this.form.submit()">
                         <option value="name" selected="@(currentSort == "name")">Назва</option>
                         <option value="dueDate" selected="@(currentSort == "dueDate")">Дата завершення</option>
@@ -46,7 +46,7 @@
                 </div>
 
                 <div class="col-md-3">
-                    <label class="form-label fw-bold">Порядок:</label>
+                    <span class="form-label fw-bold">Порядок:</span>
                     <select name="isAscending" class="form-select" onchange="this.form.submit()">
                         <option value="true" selected="@(currentIsAscending == true)">Зростання</option>
                         <option value="false" selected="@(currentIsAscending == false)">Спадання</option>

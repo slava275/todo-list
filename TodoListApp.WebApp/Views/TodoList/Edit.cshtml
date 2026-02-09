@@ -18,14 +18,14 @@
                         <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
 
                         <div class="mb-3">
-                            <label asp-for="@Model.Title" class="form-label">Назва списку</label>
-                            <input asp-for="@Model.Title" class="form-control" placeholder="@Model.Title" />
+                            <label asp-for="@Model.Title" for="Title" class="form-label">Назва списку</label>
+                            <input asp-for="@Model.Title" class="form-control" id="Title" placeholder="@Model.Title" />
                             <span asp-validation-for="@Model.Title" class="text-danger"></span>
                         </div>
 
                         <div class="mb-3">
-                            <label asp-for="@Model.Description" class="form-label">Опис</label>
-                            <textarea asp-for="@Model.Description" class="form-control" rows="3" placeholder="@Model.Description"></textarea>
+                            <label asp-for="@Model.Description" for="Description" class="form-label">Опис</label>
+                            <textarea asp-for="@Model.Description" id="Description" class="form-control" rows="3" placeholder="@Model.Description"></textarea>
                             <span asp-validation-for="@Model.Description" class="text-danger"></span>
                         </div>
 

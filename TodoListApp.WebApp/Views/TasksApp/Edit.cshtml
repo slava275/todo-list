@@ -29,19 +29,19 @@
                         <input type="hidden" asp-for="TodoListId" />
 
                         <div class="mb-3">
-                            <label asp-for="Title" class="form-label fw-bold">Назва</label>
-                            <input asp-for="Title" class="form-control" />
+                            <label asp-for="Title" for="Title" class="form-label fw-bold">Назва</label>
+                            <input asp-for="Title" id="Title" class="form-control" />
                             <span asp-validation-for="Title" class="text-danger"></span>
                         </div>
 
                         <div class="mb-3">
-                            <label asp-for="Description" class="form-label fw-bold">Опис</label>
-                            <textarea asp-for="Description" class="form-control" rows="3"></textarea>
+                            <label asp-for="Description" for="Description" class="form-label fw-bold">Опис</label>
+                            <textarea asp-for="Description" id="Description" class="form-control" rows="3"></textarea>
                             <span asp-validation-for="Description" class="text-danger"></span>
                         </div>
 
                         <div class="mb-3">
-                            <label class="form-label fw-bold"><i class="bi bi-person-badge"></i> Виконавець</label>
+                            <span class="form-label fw-bold"><i class="bi bi-person-badge"></i> Виконавець</span>
                             <div class="input-group">
                                 <input type="hidden" asp-for="AssigneeId" id="assigneeIdInput" />
 
@@ -62,15 +62,15 @@
                         </div>
 
                         <div class="mb-3">
-                            <label asp-for="DueDate" class="form-label fw-bold">Дедлайн</label>
-                            <input asp-for="DueDate" type="date" class="form-control"
+                            <label asp-for="DueDate" for="DueDate" class="form-label fw-bold">Дедлайн</label>
+                            <input asp-for="DueDate" id="DueDate" type="date" class="form-control"
                                    value="@Model.DueDate?.ToString("yyyy-MM-dd")" />
                             <span asp-validation-for="DueDate" class="text-danger"></span>
                         </div>
 
                         <div class="mb-3">
-                            <label asp-for="Status" class="form-label fw-bold">Статус</label>
-                            <select asp-for="Status" class="form-select"
+                            <label asp-for="Status" for="Status" class="form-label fw-bold">Статус</label>
+                            <select asp-for="Status" id="Status" class="form-select"
                                     asp-items="Html.GetEnumSelectList<Statuses>()">
                             </select>
                             <span asp-validation-for="Status" class="text-danger"></span>
@@ -78,7 +78,7 @@
 
                         <div class="card bg-light mb-3">
                             <div class="card-body">
-                                <label class="form-label fw-bold"><i class="bi bi-tags"></i> Керування тегами</label>
+                                <span class="form-label fw-bold"><i class="bi bi-tags"></i> Керування тегами</span>
                                 <div class="d-flex flex-wrap gap-2 mb-3">
                                     @if (Model.Tags != null && Model.Tags.Any())
                                     {

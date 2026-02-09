@@ -10,16 +10,16 @@
         <div class="card-body">
             <form asp-action="Search" method="get" class="row g-3">
                 <div class="col-md-4">
-                    <label class="form-label fw-bold">Назва:</label>
-                    <input type="text" name="title" class="form-control" value="@ViewBag.TitleFilter" placeholder="Введіть назву..." />
+                    <label for="Title" class="form-label fw-bold">Назва:</label>
+                    <input type="text" id="Title" name="title" class="form-control" value="@ViewBag.TitleFilter" placeholder="Введіть назву..." />
                 </div>
                 <div class="col-md-3">
-                    <label class="form-label fw-bold">Виконати до:</label>
-                    <input type="date" name="dueDate" class="form-control" value="@(ViewBag.DueDateFilter != null ? ((DateTime)ViewBag.DueDateFilter).ToString("yyyy-MM-dd") : "")" />
+                    <label for="DueDate" class="form-label fw-bold">Виконати до:</label>
+                    <input type="date" id="DueDate" name="dueDate" class="form-control" value="@(ViewBag.DueDateFilter != null ? ((DateTime)ViewBag.DueDateFilter).ToString("yyyy-MM-dd") : "")" />
                 </div>
                 <div class="col-md-3">
-                    <label class="form-label fw-bold">Дата створення:</label>
-                    <input type="date" name="createdAt" class="form-control" value="@(ViewBag.CreatedAtFilter != null ? ((DateTime)ViewBag.CreatedAtFilter).ToString("yyyy-MM-dd") : "")" />
+                    <label for="Date"class="form-label fw-bold">Дата створення:</label>
+                    <input id="Date" type="date" name="createdAt" class="form-control" value="@(ViewBag.CreatedAtFilter != null ? ((DateTime)ViewBag.CreatedAtFilter).ToString("yyyy-MM-dd") : "")" />
                 </div>
                 <div class="col-md-2 d-flex align-items-end gap-2">
                     <button type="submit" class="btn btn-primary flex-grow-1" title="Шукати">
