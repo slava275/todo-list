@@ -1,4 +1,4 @@
-namespace TodoListShared.Models;
+namespace TodoListApp.WebApi.Models;
 
 public enum Statuses
 {

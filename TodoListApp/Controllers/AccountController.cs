@@ -1,8 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
-using TodoListApp.Interfaces;
-using TodoListShared.Models.Models;
+using TodoListApp.WebApi.Interfaces;
+using TodoListApp.WebApi.Models.Models;
 
-namespace TodoListApp.Controllers;
+namespace TodoListApp.WebApi.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]

@@ -1,7 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace TodoList.Data.Entities;
+namespace TodoListApp.Services.Database.Entities;
 
 [Table("TodoLists")]
 public class TodoListEntity

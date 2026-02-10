@@ -1,6 +1,6 @@
 using System.Security.Claims;
 
-namespace TodoListApp.Extensions;
+namespace TodoListApp.WebApi.Extensions;
 
 public static class ClaimsPrincipalExtension
 {

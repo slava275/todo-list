@@ -1,8 +1,24 @@
+using System.Globalization;
+using Serilog;
 using TodoListApp.WebApp.Handlers;
 using TodoListApp.WebApp.Interfaces;
 using TodoListApp.WebApp.Services;
 
 var builder = WebApplication.CreateBuilder(args);
+
+Log.Logger = new LoggerConfiguration()
+    .MinimumLevel.Information()
+    .MinimumLevel.Override("Microsoft", Serilog.Events.LogEventLevel.Warning)
+    .Enrich.FromLogContext()
+    .WriteTo.Console(formatProvider: CultureInfo.InvariantCulture)
+    .WriteTo.File(
+        "logs/log-.txt",
+        rollingInterval: RollingInterval.Day,
+        outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level:u3}] {Message:lj}{NewLine}{Exception}",
+        formatProvider: CultureInfo.InvariantCulture)
+    .CreateLogger();
+
+builder.Host.UseSerilog();
 
 builder.Services.AddControllersWithViews();
 

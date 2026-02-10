@@ -1,56 +1,42 @@
-using System.Text.Json;
-using System.Text.Json.Serialization;
+using TodoListApp.WebApi.Models.Models;
+using TodoListApp.WebApi.Validation;
 using TodoListApp.WebApp.Interfaces;
-using TodoListShared.Models.Models;
 
 namespace TodoListApp.WebApp.Services;
 
-public class TagWebApiService : ITagWebApiService
+public class TagWebApiService : BaseWebApiService, ITagWebApiService
 {
-    private readonly HttpClient client;
-
-    private readonly JsonSerializerOptions options = new JsonSerializerOptions
+    public TagWebApiService(HttpClient client, ILogger<TagWebApiService> logger)
+        : base(client, logger)
     {
-        PropertyNameCaseInsensitive = true,
-        Converters = { new JsonStringEnumConverter() },
-    };
-
-    public TagWebApiService(HttpClient client)
-    {
-        this.client = client;
     }
 
     public async Task AddTagToTaskAsync(int taskId, TagModel model)
     {
-        var response = await this.client.PostAsJsonAsync($"tags/{taskId}", model, this.options);
+        ServiceValidator.EnsureValidId(taskId);
+        ServiceValidator.EnsureNotNull(model);
+        var response = await this.httpClient.PostAsJsonAsync($"tags/{taskId}", model, this.options);
 
-        if (!response.IsSuccessStatusCode)
-        {
-            var errorContent = await response.Content.ReadAsStringAsync();
-
-            throw new HttpRequestException(errorContent);
-        }
+        await this.HandleResponseAsync(response);
     }
 
     public async Task<IEnumerable<TagModel>> GetAllTagsAsync()
     {
-        return await this.client.GetFromJsonAsync<IEnumerable<TagModel>>("tags", this.options) ?? Array.Empty<TagModel>();
+        return await this.httpClient.GetFromJsonAsync<IEnumerable<TagModel>>("tags", this.options) ?? Array.Empty<TagModel>();
     }
 
     public async Task<IEnumerable<TaskModel>> GetTasksByTagIdAsync(int tagId)
     {
-        return await this.client.GetFromJsonAsync<IEnumerable<TaskModel>>($"tags/{tagId}/tasks", this.options) ?? Array.Empty<TaskModel>();
+        ServiceValidator.EnsureValidId(tagId);
+        return await this.httpClient.GetFromJsonAsync<IEnumerable<TaskModel>>($"tags/{tagId}/tasks", this.options) ?? Array.Empty<TaskModel>();
     }
 
     public async Task RemoveTagFromTaskAsync(int taskId, int tagId)
     {
-        var response = await this.client.DeleteAsync($"tags/{taskId}/{tagId}");
+        ServiceValidator.EnsureValidId(taskId);
+        ServiceValidator.EnsureValidId(tagId);
+        var response = await this.httpClient.DeleteAsync($"tags/{taskId}/{tagId}");
 
-        if (!response.IsSuccessStatusCode)
-        {
-            var errorContent = await response.Content.ReadAsStringAsync();
-
-            throw new HttpRequestException(errorContent);
-        }
+        await this.HandleResponseAsync(response);
     }
 }

@@ -1,4 +1,4 @@
-namespace TodoListShared.Models.Models;
+namespace TodoListApp.WebApi.Models.Models;
 
 public class TodoListMemberModel
 {

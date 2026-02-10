@@ -1,4 +1,4 @@
-using TodoListShared.Models.Models;
+using TodoListApp.WebApi.Models.Models;
 
 namespace TodoListApp.WebApp.Interfaces;
 

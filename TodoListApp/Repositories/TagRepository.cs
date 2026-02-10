@@ -1,9 +1,9 @@
 using Microsoft.EntityFrameworkCore;
-using TodoList.Data.Data;
-using TodoList.Data.Entities;
-using TodoListApp.Interfaces.Repositories;
+using TodoListApp.Services.Database.Data;
+using TodoListApp.Services.Database.Entities;
+using TodoListApp.WebApi.Interfaces.Repositories;
 
-namespace TodoListApp.Repositories;
+namespace TodoListApp.WebApi.Repositories;
 
 public class TagRepository : ITagRepository
 {

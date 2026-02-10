@@ -1,12 +1,12 @@
 using Microsoft.AspNetCore.Mvc;
+using TodoListApp.WebApi.Models.Models;
 using TodoListApp.WebApp.Helpers;
 using TodoListApp.WebApp.Interfaces;
-using TodoListShared.Models.Models;
 
 namespace TodoListApp.WebApp.Controllers;
 
 [JwtAuthorize]
-public class TodoListController : Controller
+public class TodoListController : BaseController
 {
     private readonly ITodoListWebApiService service;
     private readonly IUserWebApiService userService;
@@ -21,7 +21,6 @@ public class TodoListController : Controller
     public async Task<IActionResult> Index()
     {
         var todoLists = await this.service.GetAllAsync();
-
         return this.View(todoLists);
     }
 
@@ -32,6 +31,7 @@ public class TodoListController : Controller
     }
 
     [HttpPost]
+    [ValidateAntiForgeryToken]
     public async Task<IActionResult> Create(TodoListModel model)
     {
         if (!this.ModelState.IsValid)
@@ -42,16 +42,15 @@ public class TodoListController : Controller
         try
         {
             await this.service.CreateAsync(model);
-            return this.RedirectToAction("Index");
+            return this.RedirectToAction(nameof(this.Index));
         }
         catch (ArgumentException ex)
         {
-            this.ModelState.AddModelError(string.Empty, $"Не вдалося створити список: {ex.Message}");
+            this.HandleException(ex, string.Empty);
             return this.View(model);
         }
     }
 
-    // GET: TodoList/Edit/5
     [HttpGet]
     public async Task<IActionResult> Edit(int id)
     {
@@ -65,7 +64,6 @@ public class TodoListController : Controller
         return this.View(model);
     }
 
-    // POST: TodoList/Edit/5
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Edit(TodoListModel model)
@@ -78,12 +76,11 @@ public class TodoListController : Controller
         try
         {
             await this.service.UpdateAsync(model);
-
             return this.RedirectToAction(nameof(this.Index));
         }
         catch (HttpRequestException ex)
         {
-            this.ModelState.AddModelError(string.Empty, $"Не вдалося оновити список: {ex.Message}");
+            this.HandleException(ex, string.Empty);
             return this.View(model);
         }
     }
@@ -95,13 +92,13 @@ public class TodoListController : Controller
         try
         {
             await this.service.DeleteByIdAsync(id);
-            return this.RedirectToAction(nameof(this.Index));
         }
         catch (HttpRequestException ex)
         {
-            this.TempData["ErrorMessage"] = $"Не вдалося видалити список: {ex.Message}";
-            return this.RedirectToAction(nameof(this.Index));
+            this.HandleException(ex);
         }
+
+        return this.RedirectToAction(nameof(this.Index));
     }
 
     [HttpPost]
@@ -113,7 +110,7 @@ public class TodoListController : Controller
         }
         catch (HttpRequestException ex)
         {
-            this.TempData["ErrorMessage"] = ex.Message;
+            this.HandleException(ex);
         }
 
         return this.RedirectToAction("Index", "TasksApp", new { todolistId = todoListId });
@@ -128,7 +125,7 @@ public class TodoListController : Controller
         }
         catch (HttpRequestException ex)
         {
-            this.TempData["ErrorMessage"] = ex.Message;
+            this.HandleException(ex);
         }
 
         return this.RedirectToAction("Index", "TasksApp", new { todolistId = todoListId });
@@ -143,12 +140,13 @@ public class TodoListController : Controller
         }
         catch (HttpRequestException ex)
         {
-            this.TempData["ErrorMessage"] = ex.Message;
+            this.HandleException(ex);
         }
 
         return this.RedirectToAction("Index", "TasksApp", new { todolistId = todoListId });
     }
 
+    [HttpGet]
     public async Task<IActionResult> GetUsersJson(string query)
     {
         try

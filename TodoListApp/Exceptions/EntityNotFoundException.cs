@@ -1,4 +1,4 @@
-namespace TodoListApp.Exceptions;
+namespace TodoListApp.WebApi.Exceptions;
 
 public class EntityNotFoundException : Exception
 {

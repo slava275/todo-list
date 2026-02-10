@@ -5,15 +5,15 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Serilog;
-using TodoList.Data.Data;
-using TodoList.Data.Entities;
-using TodoListApp.Exceptions.Middleware;
-using TodoListApp.Interfaces;
-using TodoListApp.Interfaces.Repositories;
-using TodoListApp.Mappings;
-using TodoListApp.Repositories;
-using TodoListApp.Services;
-using TodoListShared.Models.Models;
+using TodoListApp.Services.Database.Data;
+using TodoListApp.Services.Database.Entities;
+using TodoListApp.WebApi.Exceptions.Middleware;
+using TodoListApp.WebApi.Interfaces;
+using TodoListApp.WebApi.Interfaces.Repositories;
+using TodoListApp.WebApi.Mappings;
+using TodoListApp.WebApi.Models.Models;
+using TodoListApp.WebApi.Repositories;
+using TodoListApp.WebApi.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 

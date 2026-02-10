@@ -1,8 +1,8 @@
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
-using TodoList.Data.Entities;
+using TodoListApp.Services.Database.Entities;
 
-namespace TodoList.Data.Data;
+namespace TodoListApp.Services.Database.Data;
 
 public class TodoListDbContext : IdentityDbContext<ApplicationUser>
 {

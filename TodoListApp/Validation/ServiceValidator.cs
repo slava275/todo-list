@@ -1,6 +1,6 @@
-using TodoListApp.Exceptions;
+using TodoListApp.WebApi.Exceptions;
 
-namespace TodoListApp.Validation;
+namespace TodoListApp.WebApi.Validation;
 
 public static class ServiceValidator
 {

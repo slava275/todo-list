@@ -1,8 +1,8 @@
 using AutoMapper;
-using TodoList.Data.Entities;
-using TodoListShared.Models.Models;
+using TodoListApp.Services.Database.Entities;
+using TodoListApp.WebApi.Models.Models;
 
-namespace TodoListApp.Mappings;
+namespace TodoListApp.WebApi.Mappings;
 
 public class AutomapperProfile : Profile
 {

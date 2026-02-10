@@ -1,112 +1,75 @@
-using System.Text.Json;
-using System.Text.Json.Serialization;
+using TodoListApp.WebApi.Models.Models;
+using TodoListApp.WebApi.Validation;
 using TodoListApp.WebApp.Interfaces;
-using TodoListShared.Models.Models;
 
 namespace TodoListApp.WebApp.Services;
 
-public class TodoListWebApiService : ITodoListWebApiService
+public class TodoListWebApiService : BaseWebApiService, ITodoListWebApiService
 {
-    private readonly HttpClient httpClient;
-
-    private readonly JsonSerializerOptions options = new JsonSerializerOptions
+    public TodoListWebApiService(HttpClient httpClient, ILogger<TodoListWebApiService> logger)
+        : base(httpClient, logger)
     {
-        PropertyNameCaseInsensitive = true,
-        Converters = { new JsonStringEnumConverter() },
-    };
-
-    public TodoListWebApiService(HttpClient httpClient)
-    {
-        this.httpClient = httpClient;
     }
 
     public async Task CreateAsync(TodoListModel model)
     {
-        ArgumentNullException.ThrowIfNull(model);
+        ServiceValidator.EnsureNotNull(model);
 
-        await this.httpClient.PostAsJsonAsync("todolists", model);
+        var response = await this.httpClient.PostAsJsonAsync("todolists", model, this.options);
+        await this.HandleResponseAsync(response);
     }
 
     public async Task DeleteByIdAsync(int id)
     {
-        if (id <= 0)
-        {
-            throw new ArgumentException("ID must be greater than zero.", nameof(id));
-        }
+        ServiceValidator.EnsureValidId(id);
 
         var response = await this.httpClient.DeleteAsync($"todolists/{id}");
-
-        if (!response.IsSuccessStatusCode)
-        {
-            var errorMessage = await response.Content.ReadAsStringAsync();
-
-            throw new HttpRequestException(errorMessage);
-        }
+        await this.HandleResponseAsync(response);
     }
 
     public async Task<IEnumerable<TodoListModel>> GetAllAsync()
     {
         return await this.httpClient.GetFromJsonAsync<IEnumerable<TodoListModel>>("todolists", this.options)
-            ?? Enumerable.Empty<TodoListModel>();
+               ?? Enumerable.Empty<TodoListModel>();
     }
 
-    public Task<TodoListModel> GetByIdAsync(int id)
+    public async Task<TodoListModel> GetByIdAsync(int id)
     {
-        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(id);
+        ServiceValidator.EnsureValidId(id);
 
-        return this.httpClient.GetFromJsonAsync<TodoListModel>($"todolists/{id}", this.options);
+        var result = await this.httpClient.GetFromJsonAsync<TodoListModel>($"todolists/{id}", this.options);
+        return result ?? throw new HttpRequestException("Не вдалося отримати дані списку.");
     }
 
     public async Task UpdateAsync(TodoListModel model)
     {
-        ArgumentNullException.ThrowIfNull(model);
+        ServiceValidator.EnsureNotNull(model);
 
         var response = await this.httpClient.PutAsJsonAsync($"todolists/{model.Id}", model, this.options);
-
-        if (!response.IsSuccessStatusCode)
-        {
-            var errorContent = await response.Content.ReadAsStringAsync();
-
-            throw new HttpRequestException(errorContent);
-        }
+        await this.HandleResponseAsync(response);
     }
 
     public async Task AddMemberAsync(int todoListId, string userId)
     {
-        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(todoListId);
+        ServiceValidator.EnsureValidId(todoListId);
 
-        var response = await this.httpClient.PostAsync($"todoLists/{todoListId}/members?userId={userId}", null);
-        if (!response.IsSuccessStatusCode)
-        {
-            var errorContent = await response.Content.ReadAsStringAsync();
-
-            throw new HttpRequestException(errorContent);
-        }
+        var response = await this.httpClient.PostAsync($"todolists/{todoListId}/members?userId={userId}", null);
+        await this.HandleResponseAsync(response);
     }
 
     public async Task RemoveMemberAsync(int todoListId, string memberId)
     {
-        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(todoListId);
+        ServiceValidator.EnsureValidId(todoListId);
 
-        var response = await this.httpClient.DeleteAsync($"todoLists/{todoListId}/members/{memberId}");
-        if (!response.IsSuccessStatusCode)
-        {
-            var errorContent = await response.Content.ReadAsStringAsync();
-
-            throw new HttpRequestException(errorContent);
-        }
+        var response = await this.httpClient.DeleteAsync($"todolists/{todoListId}/members/{memberId}");
+        await this.HandleResponseAsync(response);
     }
 
     public async Task UpdateMemberRoleAsync(int todoListId, string memberId, TodoListRole newRole)
     {
-        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(todoListId);
+        ServiceValidator.EnsureValidId(todoListId);
 
-        var response = await this.httpClient.PatchAsync($"todoLists/{todoListId}/members/{memberId}/role?newRole={newRole}", null);
-        if (!response.IsSuccessStatusCode)
-        {
-            var errorContent = await response.Content.ReadAsStringAsync();
-
-            throw new HttpRequestException(errorContent);
-        }
+        var response = await this.httpClient.PatchAsync($"todolists/{todoListId}/members/{memberId}/role?newRole={newRole}", null);
+        await this.HandleResponseAsync(response);
     }
 }

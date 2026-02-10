@@ -1,10 +1,10 @@
 using Microsoft.EntityFrameworkCore;
-using TodoList.Data.Data;
-using TodoList.Data.Entities;
-using TodoListApp.Interfaces.Repositories;
-using TodoListShared.Models.Models;
+using TodoListApp.Services.Database.Data;
+using TodoListApp.Services.Database.Entities;
+using TodoListApp.WebApi.Interfaces.Repositories;
+using TodoListApp.WebApi.Models.Models;
 
-namespace TodoListApp.Repositories;
+namespace TodoListApp.WebApi.Repositories;
 
 public class TodoListRepository : ITodoListRepository
 {

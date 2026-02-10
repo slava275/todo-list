@@ -4,10 +4,12 @@
     <TargetFramework>net8.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
-    <NoWarn>SA1200,IDE0058,S6853,S1192,S4144,S3993,CS8619,S4666,S1125,S4457,CS8603,CS1998,SA1515,HTML0209</NoWarn>
+    <NoWarn>SA1200,IDE0058,S6853,S1192,S4144,S3993,CS8619,S4666,S1125,S4457,CS8603,CS1998,SA1515,HTML0209,S4666б,SA1401</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Serilog.AspNetCore" Version="8.0.3" />
+    <PackageReference Include="Serilog.Sinks.File" Version="6.0.0" />
     <PackageReference Include="StyleCop.Analyzers" Version="1.1.118">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -15,8 +17,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\TodoListApp\TodoListApp.csproj" />
-    <ProjectReference Include="..\TodoListModels.Shared\TodoListShared.Models.csproj" />
+    <ProjectReference Include="..\TodoListApp\TodoListApp.WebApi.csproj" />
+    <ProjectReference Include="..\TodoListModels.Shared\TodoListApp.WebApi.Models.csproj" />
   </ItemGroup>
 
 </Project>

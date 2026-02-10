@@ -1,82 +1,57 @@
-using System.Net.Http;
-using System.Text.Json;
-using System.Text.Json.Serialization;
+using TodoListApp.WebApi.Models;
+using TodoListApp.WebApi.Models.Models;
+using TodoListApp.WebApi.Validation;
 using TodoListApp.WebApp.Interfaces;
-using TodoListShared.Models;
-using TodoListShared.Models.Models;
 
 namespace TodoListApp.WebApp.Services;
 
-public class TaskWebApiService : ITaskWebApiService
+public class TaskWebApiService : BaseWebApiService, ITaskWebApiService
 {
-    private readonly HttpClient client;
-
-    private readonly JsonSerializerOptions options = new JsonSerializerOptions
+    public TaskWebApiService(HttpClient client, ILogger<TaskWebApiService> logger)
+        : base(client, logger)
     {
-        PropertyNameCaseInsensitive = true,
-        Converters = { new JsonStringEnumConverter() },
-    };
-
-    public TaskWebApiService(HttpClient client)
-    {
-        this.client = client;
     }
 
     public async Task CreateAsync(TaskModel model)
     {
-        ArgumentNullException.ThrowIfNull(model);
+        ServiceValidator.EnsureNotNull(model);
 
-        var response = await this.client.PostAsJsonAsync("tasks", model);
+        var response = await this.httpClient.PostAsJsonAsync("tasks", model);
 
-        if (!response.IsSuccessStatusCode)
-        {
-            var errorContent = await response.Content.ReadAsStringAsync();
-
-            throw new HttpRequestException(errorContent);
-        }
+        await this.HandleResponseAsync(response);
     }
 
     public async Task DeleteByIdAsync(int id)
     {
-        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(id);
+        ServiceValidator.EnsureValidId(id);
 
-        var response = await this.client.DeleteAsync($"tasks/{id}");
+        var response = await this.httpClient.DeleteAsync($"tasks/{id}");
 
-        if (!response.IsSuccessStatusCode)
-        {
-            var errorContent = await response.Content.ReadAsStringAsync();
-
-            throw new HttpRequestException(errorContent);
-        }
+        await this.HandleResponseAsync(response);
     }
 
     public async Task<IEnumerable<TaskModel>> GetAllByListIdAsync(int listId)
     {
-        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(listId);
+        ServiceValidator.EnsureValidId(listId);
 
-        return await this.client.GetFromJsonAsync<IEnumerable<TaskModel>>($"tasks/list/{listId}", this.options)
+        return await this.httpClient.GetFromJsonAsync<IEnumerable<TaskModel>>($"tasks/list/{listId}", this.options)
             ?? Enumerable.Empty<TaskModel>();
     }
 
     public async Task<TaskModel> GetByIdAsync(int id)
     {
-        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(id);
+        ServiceValidator.EnsureValidId(id);
 
-        return await this.client.GetFromJsonAsync<TaskModel>($"tasks/{id}", this.options);
+        return await this.httpClient.GetFromJsonAsync<TaskModel>($"tasks/{id}", this.options);
     }
 
     public async Task UpdateAsync(TaskModel model)
     {
-        ArgumentNullException.ThrowIfNull(model);
+        ServiceValidator.EnsureNotNull(model);
 
-        var response = await this.client.PutAsJsonAsync($"tasks/{model.Id}", model, this.options);
+        var response = await this.httpClient.PutAsJsonAsync($"tasks/{model.Id}", model, this.options);
 
-        if (!response.IsSuccessStatusCode)
-        {
-            var errorContent = await response.Content.ReadAsStringAsync();
-
-            throw new HttpRequestException(errorContent);
-        }
+        await this.HandleResponseAsync(response);
     }
 
     public async Task<IEnumerable<TaskModel>> GetAllByUserIdAsync(Statuses? status = null, string sortBy = "name", bool isAscending = true)
@@ -90,7 +65,7 @@ public class TaskWebApiService : ITaskWebApiService
 
         try
         {
-            var response = await this.client.GetFromJsonAsync<IEnumerable<TaskModel>>(url, this.options);
+            var response = await this.httpClient.GetFromJsonAsync<IEnumerable<TaskModel>>(url, this.options);
             return response ?? Enumerable.Empty<TaskModel>();
         }
         catch (HttpRequestException)
@@ -121,7 +96,7 @@ public class TaskWebApiService : ITaskWebApiService
 
         try
         {
-            var response = await this.client.GetFromJsonAsync<IEnumerable<TaskModel>>(url, this.options);
+            var response = await this.httpClient.GetFromJsonAsync<IEnumerable<TaskModel>>(url, this.options);
             return response ?? Enumerable.Empty<TaskModel>();
         }
         catch (HttpRequestException)
@@ -132,12 +107,9 @@ public class TaskWebApiService : ITaskWebApiService
 
     public async Task AssignTaskAsync(int taskId, string userId)
     {
-        var response = await this.client.PostAsync($"tasks/{taskId}/assign?userId={userId}", null);
+        ServiceValidator.EnsureValidId(taskId);
+        var response = await this.httpClient.PostAsync($"tasks/{taskId}/assign?userId={userId}", null);
 
-        if (!response.IsSuccessStatusCode)
-        {
-            var error = await response.Content.ReadAsStringAsync();
-            throw new HttpRequestException(error);
-        }
+        await this.HandleResponseAsync(response);
     }
 }

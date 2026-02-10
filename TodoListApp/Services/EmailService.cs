@@ -1,8 +1,8 @@
 using System.Net;
 using System.Net.Mail;
-using TodoListApp.Interfaces;
+using TodoListApp.WebApi.Interfaces;
 
-namespace TodoListApp.Services;
+namespace TodoListApp.WebApi.Services;
 
 public class EmailService : IEmailService
 {

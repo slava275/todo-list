@@ -2,11 +2,11 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.IdentityModel.Tokens;
-using TodoList.Data.Entities;
-using TodoListApp.Interfaces;
-using TodoListShared.Models.Models;
+using TodoListApp.Services.Database.Entities;
+using TodoListApp.WebApi.Interfaces;
+using TodoListApp.WebApi.Models.Models;
 
-namespace TodoListApp.Services;
+namespace TodoListApp.WebApi.Services;
 
 public class AccountDatabaseService : IAccountService
 {

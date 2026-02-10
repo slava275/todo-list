@@ -1,14 +1,14 @@
 using Microsoft.AspNetCore.Mvc;
+using TodoListApp.WebApi.Models;
+using TodoListApp.WebApi.Models.Models;
 using TodoListApp.WebApp.Helpers;
 using TodoListApp.WebApp.Interfaces;
-using TodoListShared.Models;
-using TodoListShared.Models.Models;
 
 namespace TodoListApp.WebApp.Controllers;
 
 [JwtAuthorize]
 [Route("TasksApp")]
-public class TasksAppController : Controller
+public class TasksAppController : BaseController
 {
     private readonly ITaskWebApiService service;
     private readonly ITagWebApiService tagService;
@@ -32,7 +32,7 @@ public class TasksAppController : Controller
         }
         catch (ArgumentOutOfRangeException ex)
         {
-            this.ModelState.AddModelError(string.Empty, $"Не вдалося знайти завдання: {ex.Message}");
+            this.HandleException(ex);
             return this.RedirectToAction("Index", "TodoList");
         }
     }
@@ -45,6 +45,7 @@ public class TasksAppController : Controller
     }
 
     [HttpPost("Create/{todolistId}")]
+    [ValidateAntiForgeryToken]
     public async Task<IActionResult> Create(TaskModel model)
     {
         if (!this.ModelState.IsValid)
@@ -55,12 +56,11 @@ public class TasksAppController : Controller
         try
         {
             await this.service.CreateAsync(model);
-
-            return this.RedirectToAction("Index", new { todolistId = model.TodoListId });
+            return this.RedirectToAction(nameof(this.Index), new { todolistId = model.TodoListId });
         }
         catch (HttpRequestException ex)
         {
-            this.TempData["ErrorMessage"] = $"Не вдалося створити завдання: {ex.Message}";
+            this.HandleException(ex, string.Empty);
             return this.View(model);
         }
     }
@@ -72,16 +72,15 @@ public class TasksAppController : Controller
         try
         {
             await this.service.DeleteByIdAsync(id);
-            return this.RedirectToAction("Index", new { todolistId = todolistId });
         }
         catch (HttpRequestException ex)
         {
-            this.TempData["ErrorMessage"] = $"Не вдалося видалити: {ex.Message}";
-            return this.RedirectToAction("Index", new { todolistId = todolistId });
+            this.HandleException(ex);
         }
+
+        return this.RedirectToAction(nameof(this.Index), new { todolistId = todolistId });
     }
 
-    // GET: TasksApp/Edit/5
     [HttpGet("Edit/{id}")]
     public async Task<IActionResult> Edit(int id)
     {
@@ -94,8 +93,8 @@ public class TasksAppController : Controller
         return this.View(task);
     }
 
-    // POST: TasksApp/Edit/5
     [HttpPost("Edit/{id}")]
+    [ValidateAntiForgeryToken]
     public async Task<IActionResult> Edit(int id, TaskModel model)
     {
         if (id != model.Id)
@@ -111,13 +110,14 @@ public class TasksAppController : Controller
         try
         {
             await this.service.UpdateAsync(model);
-            return this.RedirectToAction("Index", new { todolistId = model.TodoListId });
+            return this.RedirectToAction(nameof(this.Index), new { todolistId = model.TodoListId });
         }
         catch (HttpRequestException ex)
         {
-            var newModel = await this.service.GetByIdAsync(model.Id);
-            this.TempData["ErrorMessage"] = $"Не вдалося відредагувати завдання: {ex.Message}";
-            return this.View(newModel);
+            this.HandleException(ex, string.Empty);
+
+            var taskFromDb = await this.service.GetByIdAsync(model.Id);
+            return this.View(taskFromDb);
         }
     }
 
@@ -136,11 +136,9 @@ public class TasksAppController : Controller
     [HttpGet("Assigned")]
     public async Task<IActionResult> Assigned(Statuses? statusFilter, string sortBy = "name", bool isAscending = true)
     {
-        Statuses? filter = statusFilter;
+        var tasks = await this.service.GetAllByUserIdAsync(statusFilter, sortBy, isAscending);
 
-        var tasks = await this.service.GetAllByUserIdAsync(filter, sortBy, isAscending);
-
-        this.ViewBag.CurrentFilter = filter;
+        this.ViewBag.CurrentFilter = statusFilter;
         this.ViewBag.CurrentSort = sortBy;
         this.ViewBag.CurrentIsAscending = isAscending;
 
@@ -160,6 +158,7 @@ public class TasksAppController : Controller
     }
 
     [HttpPost("AddTag")]
+    [ValidateAntiForgeryToken]
     public async Task<IActionResult> AddTag(int taskId, string tagName)
     {
         try
@@ -168,75 +167,77 @@ public class TasksAppController : Controller
             {
                 await this.tagService.AddTagToTaskAsync(taskId, new TagModel { Name = tagName.Trim() });
             }
-
-            return this.RedirectToAction("Edit", new { id = taskId });
         }
         catch (HttpRequestException ex)
         {
-            this.TempData["ErrorMessage"] = $"Не вдалося додати тег: {ex.Message}";
-            return this.RedirectToAction("Edit", new { id = taskId });
+            this.HandleException(ex);
         }
+
+        return this.RedirectToAction(nameof(this.Edit), new { id = taskId });
     }
 
     [HttpPost("RemoveTag")]
+    [ValidateAntiForgeryToken]
     public async Task<IActionResult> RemoveTag(int taskId, int tagId)
     {
         try
         {
             await this.tagService.RemoveTagFromTaskAsync(taskId, tagId);
-
-            return this.RedirectToAction("Edit", new { id = taskId });
         }
         catch (HttpRequestException ex)
         {
-            this.TempData["ErrorMessage"] = $"Не вдалося видалити тег: {ex.Message}";
-            return this.RedirectToAction("Edit", new { id = taskId });
+            this.HandleException(ex);
         }
+
+        return this.RedirectToAction(nameof(this.Edit), new { id = taskId });
     }
 
     [HttpPost("AddComment")]
+    [ValidateAntiForgeryToken]
     public async Task<IActionResult> AddComment(int taskId, string commentText)
     {
         if (string.IsNullOrWhiteSpace(commentText))
         {
-            return this.RedirectToAction("Details", new { id = taskId });
+            return this.RedirectToAction(nameof(this.Details), new { id = taskId });
         }
-
-        var newComment = new CommentModel
-        {
-            TaskId = taskId,
-            Text = commentText,
-            CreatedAt = DateTime.Now,
-        };
 
         try
         {
+            var newComment = new CommentModel
+            {
+                TaskId = taskId,
+                Text = commentText,
+                CreatedAt = DateTime.UtcNow,
+            };
+
             await this.commentService.AddAsync(newComment);
-            return this.RedirectToAction("Details", new { id = taskId });
         }
         catch (HttpRequestException ex)
         {
-            this.TempData["ErrorMessage"] = $"Не вдалося додати коментар: {ex.Message}";
-            return this.RedirectToAction("Details", new { id = taskId });
+            this.HandleException(ex);
         }
+
+        return this.RedirectToAction(nameof(this.Details), new { id = taskId });
     }
 
     [HttpPost("DeleteComment")]
+    [ValidateAntiForgeryToken]
     public async Task<IActionResult> DeleteComment(int commentId, int taskId)
     {
         try
         {
             await this.commentService.DeleteAsync(commentId);
-            return this.RedirectToAction("Details", new { id = taskId });
         }
         catch (HttpRequestException ex)
         {
-            this.TempData["ErrorMessage"] = $"Не вдалося видалити коментар: {ex.Message}";
-            return this.RedirectToAction("Details", new { id = taskId });
+            this.HandleException(ex);
         }
+
+        return this.RedirectToAction(nameof(this.Details), new { id = taskId });
     }
 
     [HttpPost("EditComment")]
+    [ValidateAntiForgeryToken]
     public async Task<IActionResult> EditComment(int commentId, int taskId, string newText)
     {
         try
@@ -250,17 +251,17 @@ public class TasksAppController : Controller
                     TaskId = taskId,
                 });
             }
-
-            return this.RedirectToAction(nameof(this.Details), new { id = taskId });
         }
         catch (HttpRequestException ex)
         {
-            this.TempData["ErrorMessage"] = $"Не вдалося оновити коментар: {ex.Message}";
-            return this.RedirectToAction("Details", new { id = taskId });
+            this.HandleException(ex);
         }
+
+        return this.RedirectToAction(nameof(this.Details), new { id = taskId });
     }
 
-    [HttpPost]
+    [HttpPost("Assign")]
+    [ValidateAntiForgeryToken]
     public async Task<IActionResult> Assign(int taskId, string userId, int todolistId)
     {
         try
@@ -269,9 +270,9 @@ public class TasksAppController : Controller
         }
         catch (HttpRequestException ex)
         {
-            this.TempData["ErrorMessage"] = "Не вдалося призначити виконавця: " + ex.Message;
+            this.HandleException(ex);
         }
 
-        return this.RedirectToAction("Index", new { todolistId = todolistId });
+        return this.RedirectToAction(nameof(this.Index), new { todolistId = todolistId });
     }
 }

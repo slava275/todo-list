@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace TodoList.Data.Entities;
+namespace TodoListApp.Services.Database.Entities;
 
 public class TagEntity
 {

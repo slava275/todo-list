@@ -1,12 +1,12 @@
 using AutoMapper;
-using TodoList.Data.Entities;
-using TodoListApp.Exceptions;
-using TodoListApp.Interfaces;
-using TodoListApp.Interfaces.Repositories;
-using TodoListApp.Validation;
-using TodoListShared.Models.Models;
+using TodoListApp.Services.Database.Entities;
+using TodoListApp.WebApi.Exceptions;
+using TodoListApp.WebApi.Interfaces;
+using TodoListApp.WebApi.Interfaces.Repositories;
+using TodoListApp.WebApi.Models.Models;
+using TodoListApp.WebApi.Validation;
 
-namespace TodoListApp.Services;
+namespace TodoListApp.WebApi.Services;
 
 public class CommentDatabaseService : ICommentDatabaseService
 {

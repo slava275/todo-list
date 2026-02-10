@@ -1,8 +1,8 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using TodoListApp.WebApi.Models.Models;
 using TodoListApp.WebApp.Interfaces;
 using TodoListApp.WebApp.Models;
-using TodoListShared.Models.Models;
 
 namespace TodoListApp.WebApp.Services;
 

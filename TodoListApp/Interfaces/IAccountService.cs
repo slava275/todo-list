@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Identity;
-using TodoListShared.Models.Models;
+using TodoListApp.WebApi.Models.Models;
 
-namespace TodoListApp.Interfaces;
+namespace TodoListApp.WebApi.Interfaces;
 
 public interface IAccountService
 {

@@ -1,10 +1,10 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using TodoListApp.Extensions;
-using TodoListApp.Interfaces;
-using TodoListShared.Models.Models;
+using TodoListApp.WebApi.Extensions;
+using TodoListApp.WebApi.Interfaces;
+using TodoListApp.WebApi.Models.Models;
 
-namespace TodoListApp.Controllers;
+namespace TodoListApp.WebApi.Controllers;
 
 [Authorize]
 [ApiController]

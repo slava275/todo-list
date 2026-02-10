@@ -1,4 +1,6 @@
-namespace TodoListApp.Exceptions.Middleware;
+using TodoListApp.WebApi.Exceptions;
+
+namespace TodoListApp.WebApi.Exceptions.Middleware;
 
 public class ExceptionHandlingMiddleware
 {

@@ -1,6 +1,6 @@
-using TodoList.Data.Entities;
+using TodoListApp.Services.Database.Entities;
 
-namespace TodoListApp.Interfaces.Repositories;
+namespace TodoListApp.WebApi.Interfaces.Repositories;
 
 public interface ITaskRepository
 {

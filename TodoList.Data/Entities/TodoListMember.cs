@@ -1,7 +1,7 @@
 using System.ComponentModel.DataAnnotations.Schema;
-using TodoListShared.Models.Models;
+using TodoListApp.WebApi.Models.Models;
 
-namespace TodoList.Data.Entities;
+namespace TodoListApp.Services.Database.Entities;
 
 public class TodoListMember
 {

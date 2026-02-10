@@ -13,13 +13,13 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		user-stories.md = user-stories.md
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TodoListApp", "TodoListApp\TodoListApp.csproj", "{C949456E-B506-4002-8C9C-9870C7F724C2}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TodoListApp.WebApi", "TodoListApp\TodoListApp.WebApi.csproj", "{C949456E-B506-4002-8C9C-9870C7F724C2}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TodoListApp.WebApp", "TodoListApp.WebApp\TodoListApp.WebApp.csproj", "{1BDD51A1-713B-418F-8207-74691F6A5032}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TodoListShared.Models", "TodoListModels.Shared\TodoListShared.Models.csproj", "{586EF4B9-94E8-4312-AFA4-50B5CEC8C9DD}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TodoListApp.WebApi.Models", "TodoListModels.Shared\TodoListApp.WebApi.Models.csproj", "{586EF4B9-94E8-4312-AFA4-50B5CEC8C9DD}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TodoList.Data", "TodoList.Data\TodoList.Data.csproj", "{5F7CA42E-CF38-4758-9BDE-4BBFFD3605C7}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TodoListApp.Services.Database", "TodoList.Data\TodoListApp.Services.Database.csproj", "{5F7CA42E-CF38-4758-9BDE-4BBFFD3605C7}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

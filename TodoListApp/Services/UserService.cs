@@ -1,10 +1,10 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using TodoList.Data.Entities;
-using TodoListApp.Interfaces;
-using TodoListShared.Models.Models;
+using TodoListApp.Services.Database.Entities;
+using TodoListApp.WebApi.Interfaces;
+using TodoListApp.WebApi.Models.Models;
 
-namespace TodoListApp.Services;
+namespace TodoListApp.WebApi.Services;
 
 public class UserService : IUserService
 {
