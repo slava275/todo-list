@@ -51,8 +51,8 @@ public static class DataSeeder
                     Comments = new List<CommentEntity>
                     {
                         new CommentEntity { Text = "Всі юзер сторі закриті успішно!", CreatedAt = DateTime.UtcNow.AddDays(-4), UserId = testUserId },
-                        new CommentEntity { Text = "Залишилось підготувати звіт.", CreatedAt = DateTime.UtcNow.AddDays(-3), UserId = testUserId }
-                    }
+                        new CommentEntity { Text = "Залишилось підготувати звіт.", CreatedAt = DateTime.UtcNow.AddDays(-3), UserId = testUserId },
+                    },
                 },
                 new TaskEntity
                 {
@@ -66,10 +66,10 @@ public static class DataSeeder
                     Tags = new List<TagEntity> { tagEducation, tagUrgent },
                     Comments = new List<CommentEntity>
                     {
-                        new CommentEntity { Text = "Треба не забути додати коментарі в сідер.", CreatedAt = DateTime.UtcNow, UserId = testUserId }
-                    }
-                }
-            }
+                        new CommentEntity { Text = "Треба не забути додати коментарі в сідер.", CreatedAt = DateTime.UtcNow, UserId = testUserId, },
+                    },
+                },
+            },
         };
 
         var listPersonal = new TodoListEntity
@@ -89,10 +89,10 @@ public static class DataSeeder
                     Tags = new List<TagEntity> { tagTravel, tagUrgent },
                     Comments = new List<CommentEntity>
                     {
-                        new CommentEntity { Text = "Подивитися ціни на Intercity.", CreatedAt = DateTime.UtcNow.AddHours(-2), UserId = testUserId }
-                    }
-                }
-            }
+                        new CommentEntity { Text = "Подивитися ціни на Intercity.", CreatedAt = DateTime.UtcNow.AddHours(-2), UserId = testUserId, },
+                    },
+                },
+            },
         };
 
         context.TodoLists.AddRange(listEpam, listPersonal);
@@ -104,7 +104,7 @@ public static class DataSeeder
         {
             new TodoListMember { TodoListId = listEpam.Id, UserId = testUserId, Role = TodoListRole.Owner },
             new TodoListMember { TodoListId = listPersonal.Id, UserId = testUserId, Role = TodoListRole.Owner },
-            new TodoListMember { TodoListId = listEpam.Id, UserId = "3142db48-9d6d-422d-94e8-7f7e6576dcd9", Role = TodoListRole.Viewer }
+            new TodoListMember { TodoListId = listEpam.Id, UserId = "3142db48-9d6d-422d-94e8-7f7e6576dcd9", Role = TodoListRole.Viewer },
         };
 
         context.TodoListMembers.AddRange(memberships);

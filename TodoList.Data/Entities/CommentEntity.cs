@@ -10,6 +10,7 @@ public class CommentEntity
     [Required]
     [MaxLength(300)]
     public string Text { get; set; } = string.Empty;
+
     public DateTime CreatedAt { get; set; } = DateTime.Now;
 
     public int TaskId { get; set; }
