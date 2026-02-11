@@ -4,5 +4,5 @@ public enum TodoListRole
 {
     Owner = 0,
     Editor = 1,
-    Viewer = 2
+    Viewer = 2,
 }

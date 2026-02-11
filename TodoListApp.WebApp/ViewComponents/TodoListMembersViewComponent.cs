@@ -1,5 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
-using TodoListApp.WebApp.Interfaces;
+using TodoListApp.Services.WebApi.Interfaces;
 
 namespace TodoListApp.WebApp.ViewComponents;
 

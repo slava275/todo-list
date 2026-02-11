@@ -7,13 +7,15 @@ using Microsoft.IdentityModel.Tokens;
 using Serilog;
 using TodoListApp.Services.Database.Data;
 using TodoListApp.Services.Database.Entities;
-using TodoListApp.WebApi.Exceptions.Middleware;
-using TodoListApp.WebApi.Interfaces;
-using TodoListApp.WebApi.Interfaces.Repositories;
+using TodoListApp.Services.Database.Interfaces;
+using TodoListApp.Services.Database.Interfaces.Repositories;
+using TodoListApp.Services.Database.Repositories;
+using TodoListApp.Services.Database.Services;
+using TodoListApp.Services.Interfaces;
+using TodoListApp.Services.Services;
 using TodoListApp.WebApi.Mappings;
+using TodoListApp.WebApi.Middleware;
 using TodoListApp.WebApi.Models.Models;
-using TodoListApp.WebApi.Repositories;
-using TodoListApp.WebApi.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -89,8 +91,8 @@ builder.Services.AddAuthentication(options =>
             ValidIssuer = builder.Configuration["Jwt:Issuer"],
             ValidAudience = builder.Configuration["Jwt:Audience"],
             IssuerSigningKey = new SymmetricSecurityKey(keyBytes),
-            NameClaimType = "sub", // Вказуємо, що ID користувача лежить у "sub"
-            RoleClaimType = "role", // Якщо у тебе будуть ролі
+            NameClaimType = "sub",
+            RoleClaimType = "role",
         };
     });
 

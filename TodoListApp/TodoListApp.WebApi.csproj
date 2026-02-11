@@ -33,6 +33,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\TodoList.Data\TodoListApp.Services.Database.csproj" />
+    <ProjectReference Include="..\TodoListApp.Services\TodoListApp.Services.csproj" />
     <ProjectReference Include="..\TodoListModels.Shared\TodoListApp.WebApi.Models.csproj" />
   </ItemGroup>
 

@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using TodoListApp.Services.Database.Interfaces;
 using TodoListApp.WebApi.Extensions;
-using TodoListApp.WebApi.Interfaces;
 using TodoListApp.WebApi.Models.Models;
 
 namespace TodoListApp.WebApi.Controllers;

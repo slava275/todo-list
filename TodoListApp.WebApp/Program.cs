@@ -1,8 +1,8 @@
 using System.Globalization;
 using Serilog;
+using TodoListApp.Services.WebApi.Interfaces;
+using TodoListApp.Services.WebApi.Services;
 using TodoListApp.WebApp.Handlers;
-using TodoListApp.WebApp.Interfaces;
-using TodoListApp.WebApp.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
